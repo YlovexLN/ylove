@@ -20,7 +20,7 @@ interface FooterProps {
   /** 页脚底部信息配置（CDN / Host 等普通项 + 独立备案号），show=false 或全部为空时不显示 */
   footerInfo?: {
     show?: boolean;
-    items: FooterInfoItem[];
+    items?: FooterInfoItem[];
     icp?: FooterIcp;
   };
 }
