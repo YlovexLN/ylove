@@ -1,0 +1,119 @@
+# 站点配置 - 修改此处即可更新页面内容
+
+# 名称
+name = "YLOVEXLN"
+
+# Logo（不填则使用 name）
+# logo = ""
+
+# B站 UID - 头像会自动从 B站 获取 https://space.bilibili.com/这里的数字填在下面
+# 获取不到会显示空白 24421599
+# 可用环境变量 BILIBILI_UID 覆盖
+bilibili_uid = 680447
+
+# 默认头像（B站获取失败或未填 UID 时使用）
+avatar = ""
+
+# 标题列表（用于 Hero 区域的轮播标题，可设置多个）
+titles = [
+  "笔锋悬停迟迟不敢点睛",
+  "莫听穿林打叶声，一蓑烟雨任平生"
+]
+
+# 打字机速度（毫秒/字，数值越大越慢，默认 120）
+typewriter_speed = 250
+
+# 背景滚动文字（仅End主题 不填则使用 name）
+# background_text = ""
+
+# 页面模式（single=单页只显示Hero+导航+页脚，scroll=可往下滚动展示模块）
+# 可用环境变量 PAGE_MODE 覆盖
+mode = "scroll"
+
+# 内容来源（strapi=构建时从 Strapi API 拉取，markdown=使用 src/content/ 下预写的 Markdown）
+content_source = "markdown"
+
+# Strapi CMS 配置
+# url: Strapi API 地址
+#   Strapi Cloud: https://你的实例名.strapiapp.com
+#   自部署 Docker: https://cms.你的域名.com
+#   本地开发: http://127.0.0.1:1337
+# token: API Token（可选，Strapi 后台 Settings → API Tokens 创建；留空则匿名访问）
+[strapi]
+url = "http://127.0.0.1:1337"
+token = ""
+
+# 模块开关 - 设为 false 可关闭对应模块
+[modules]
+profile = false
+works = true
+posts = false
+repository = false
+contact = false
+
+
+# ── 社交链接（可自由添加 / 删除）─────────────────────────────────────
+#
+# 每个 [[socials]] 块一个图标：添加复制一块、删除整块，顺序即显示顺序。
+#
+# name=名称 url=链接 icon=FontAwesome图标名（省略时用 name 小写匹配）
+#
+# logo=自定义图标图片地址（单色 SVG 最佳，mask 渲染，颜色自动跟随主题：灰→hover金）
+#
+# 图标库：Font Awesome 品牌图标 https://fontawesome.com/icons?d=brands&m=free
+#   常见：github / x(twitter) / linkedin / bilibili / youtube / instagram / discord /
+#   telegram / weixin / qq / npm / stackoverflow / reddit / facebook / twitch / tiktok /
+#   medium / spotify / codepen / gitlab / bitbucket / docker / figma / slack / line /
+#   zhihu / steam / mail / rss / globe / phone / headphones / kofi / patreon
+#
+# 其他平台图标（爱发电等）：Simple Icons https://cdn.simpleicons.org/{图标名}/{颜色}
+#   例：https://cdn.simpleicons.org/afdian/000000 （颜色任意，000000 黑色即可）
+#
+# show_social_icons=是否显示社交图标（false 时只显示文字，默认 true）
+show_social_icons = true
+
+[[socials]]
+name = "GitHub"
+url = "https://github.com/YlovexLN/"
+icon = "github"
+
+[[socials]]
+name = "bilibili"
+url = "https://space.bilibili.com/"
+icon = "bilibili"
+
+[[socials]]
+name = "猫耳FM"
+url = "https://www.missevan.com/"
+icon = "headphones"
+
+[[socials]]
+name = "爱发电"
+url = "https://afdian.com/"
+logo = "https://cdn.simpleicons.org/afdian/000000"
+
+
+# ── 页脚底部信息（CDN / Host / 备案等）─────────────────────────────
+#
+# show=是否显示整行（false 隐藏，默认 true）
+# 每项：label=链接前的文字（可留空） text=链接文字 url=跳转地址
+#   每项可加 show=false 单独隐藏，默认 true
+# 备案号独立配置 [footer.icp]，可用环境变量 FOOTER_ICP_SHOW 单独控制
+[footer]
+show = true
+
+[[footer.items]]
+label = "CDN - "
+text = "七牛云"
+url = "https://www.qiniu.com/"
+
+[[footer.items]]
+label = "HOST - "
+text = "EdgeOne"
+url = "https://edgeone.ai/"
+
+# 备案号（独立配置，FOOTER_ICP_SHOW=false 可单独隐藏）
+[footer.icp]
+show = false
+text = "黔ICP备2025044225号"
+url = "http://beian.miit.gov.cn/"

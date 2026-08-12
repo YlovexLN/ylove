@@ -1,0 +1,7 @@
+{
+  "name": "ylove",
+  "installCommand": "pnpm install",
+  "buildCommand": "pnpm build:edgeone",
+  "outputDirectory": ".edgeone",
+  "nodeVersion": "22.11.0"
+}

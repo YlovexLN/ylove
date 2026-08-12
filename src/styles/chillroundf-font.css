@@ -1,0 +1,18 @@
+/* 寒蝉全圆体 (ChillRoundF) - Self-hosted */
+/* Supports Chinese (simplified/traditional), Japanese, Latin */
+
+@font-face {
+  font-family: 'ChillRoundF';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/ChillRoundFRegular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'ChillRoundF';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/ChillRoundFBold.ttf') format('truetype');
+}

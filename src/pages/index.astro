@@ -1,0 +1,159 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Navbar from "@/components/react/Navbar";
+import Hero from "@/components/react/Hero";
+import Footer from "@/components/react/Footer";
+import { getRawProfile } from "@/data/profile";
+import fetchApi from "@/lib/strapi";
+import { getCollection } from "astro:content";
+import WorkCards from "@/components/react/WorkCards";
+import { filterValidWorks, parseWorkMd, type WorkRecord } from "@/lib/work-parser";
+import type { Work } from "@/interfaces/work";
+import type { Post } from "@/data/posts";
+import workMdRaw from "@/content/works/work.md?raw";
+
+const raw = getRawProfile();
+const avatar = raw.avatar || "";
+const liveGifUrl = "/avatars/live.gif";
+const isScroll = raw.mode === "scroll";
+const mod = raw.modules;
+const contentSource = raw.content_source;
+
+let works: Work[] = [];
+let posts: Post[] = [];
+// 提供给 WorkCards 组件渲染的记录（markdown 模式来自 work.md 解析；strapi 模式来自 API）
+let workCards: WorkRecord[] = [];
+
+if (contentSource === "markdown") {
+  // 纯静态模式：解析 work.md（结构化多记录文档）
+  workCards = filterValidWorks(parseWorkMd(workMdRaw));
+
+  const mdPosts = await getCollection("posts");
+  posts = mdPosts
+    .map((p) => ({
+      date: p.data.date,
+      title: p.data.title,
+      summary: p.data.summary,
+      url: p.data.url,
+    }))
+    .sort((a, b) => b.date.localeCompare(a.date));
+} else {
+  // Strapi 模式：构建时从 Strapi API 拉取
+  try {
+    works = await fetchApi<Work[]>({
+      endpoint: "works",
+      wrappedByKey: "data",
+    });
+  } catch (e) {
+    console.error("[index] 拉取作品失败:", e);
+  }
+  try {
+    posts = await fetchApi<Post[]>({
+      endpoint: "posts",
+      wrappedByKey: "data",
+    });
+  } catch (e) {
+    console.error("[index] 拉取文章失败:", e);
+  }
+  workCards = works.map((w) => ({
+    id: String(w.id),
+    title: w.title,
+    description: w.description,
+    url: w.url,
+    tags: w.tags || [],
+  }));
+}
+---
+
+<Layout>
+  <Navbar client:load />
+  <main>
+    <Hero
+      client:load
+      name={raw.name}
+      avatar={avatar}
+      titles={raw.titles}
+      typewriterSpeed={raw.typewriter_speed}
+      socials={raw.socials}
+      showSocialIcons={raw.show_social_icons}
+      bilibiliUid={raw.bilibili_uid}
+      liveGifUrl={liveGifUrl}
+      mode={raw.mode}
+    />
+
+    {
+      isScroll && (
+        <>
+          {mod.profile && (
+          <section id="profile" class="scroll-section min-h-screen flex items-center justify-center px-4">
+            <div class="max-w-3xl mx-auto text-center">
+              <h2 class="text-4xl md:text-5xl font-display font-hero-weight mb-6">Profile</h2>
+              <p class="text-text-secondary text-lg leading-relaxed">
+                内容待配置
+              </p>
+            </div>
+          </section>
+          )}
+
+          {mod.works && workCards.length > 0 && (
+          <section id="works" class="scroll-section min-h-screen flex items-center justify-center px-4 py-20">
+            <div class="max-w-6xl mx-auto w-full">
+              <h2 class="text-4xl md:text-5xl font-display font-hero-weight mb-8 text-center">Works</h2>
+              <WorkCards
+                client:load
+                initialWorks={workCards}
+                watchLive={contentSource === "markdown"}
+              />
+            </div>
+          </section>
+          )}
+
+          {mod.posts && posts.length > 0 && (
+          <section id="posts" class="scroll-section min-h-screen flex items-center justify-center px-4 py-20">
+            <div class="max-w-3xl mx-auto text-center">
+              <h2 class="text-4xl md:text-5xl font-display font-hero-weight mb-8">Posts</h2>
+              <div class="grid gap-6 text-left">
+                {posts.map((post) => (
+                  <a
+                    href={post.url || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="block p-6 rounded-xl bg-bg-card hover:bg-bg-card-hover transition-colors duration-200"
+                  >
+                    <span class="text-xs text-text-muted font-mono">{post.date}</span>
+                    <h3 class="text-xl font-display font-hero-weight mb-2">{post.title}</h3>
+                    <p class="text-text-secondary mb-3">{post.summary}</p>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </section>
+          )}
+
+          {mod.repository && (
+          <section id="repository" class="scroll-section min-h-screen flex items-center justify-center px-4 py-20">
+            <div class="max-w-3xl mx-auto text-center">
+              <h2 class="text-4xl md:text-5xl font-display font-hero-weight mb-6">Repository</h2>
+              <p class="text-text-secondary text-lg leading-relaxed">
+                内容待配置
+              </p>
+            </div>
+          </section>
+          )}
+
+          {mod.contact && (
+          <section id="contact" class="scroll-section min-h-screen flex items-center justify-center px-4 py-20">
+            <div class="max-w-3xl mx-auto text-center">
+              <h2 class="text-4xl md:text-5xl font-display font-hero-weight mb-6">Contact</h2>
+              <p class="text-text-secondary text-lg leading-relaxed">
+                内容待配置
+              </p>
+            </div>
+          </section>
+          )}
+        </>
+      )
+    }
+  </main>
+  <Footer client:visible footerInfo={raw.footer} />
+</Layout>

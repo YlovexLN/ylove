@@ -1,0 +1,93 @@
+# 站点配置 - 默认模板（复制为 config.toml 后修改）
+
+# 名称 / Logo（Logo 不填则用 name）
+name = "你的名字"
+# logo = ""
+
+# B站 UID（头像自动获取，失败时用下方 avatar；可用环境变量 BILIBILI_UID 覆盖）
+bilibili_uid = 0
+avatar = ""
+
+# Hero 轮播标题
+titles = ["你好，世界", "欢迎来到我的主页"]
+
+# 打字机速度（毫秒/字，默认 120）
+typewriter_speed = 120
+
+# 背景滚动文字（仅 End 主题，不填用 name）
+# background_text = ""
+
+# 页面模式：single=仅Hero+导航+页脚，scroll=可滚动展示模块（可用环境变量 PAGE_MODE 覆盖）
+mode = "scroll"
+
+# 内容来源：strapi=构建时拉取，markdown=使用 src/content/ 下预写内容
+content_source = "markdown"
+
+# 个人简介（About 模块）
+bio = "你好，我是站点的主人。"
+
+# 统计信息（About 模块，可自由增删）
+[[stats]]
+label = "项目"
+value = "12"
+
+[[stats]]
+label = "文章"
+value = "8"
+
+# 是否显示社交图标（false 时只显示文字）
+show_social_icons = true
+
+# Strapi CMS 配置（本地开发 http://127.0.0.1:1337）
+[strapi]
+url = "http://127.0.0.1:1337"
+token = ""
+
+# 模块开关（false=关闭对应模块）
+[modules]
+profile = true
+works = true
+posts = true
+repository = true
+contact = true
+
+# 社交链接：每个 [[socials]] 一条
+#   icon=FontAwesome 图标名；logo=自定义图标图片地址（优先级更高）
+#   图标库 https://fontawesome.com/icons?d=brands&m=free
+[[socials]]
+name = "GitHub"
+url = "https://github.com/你的用户名"
+icon = "github"
+
+[[socials]]
+name = "bilibili"
+url = "https://space.bilibili.com/"
+icon = "bilibili"
+
+[[socials]]
+name = "邮箱"
+url = "mailto:you@example.com"
+icon = "mail"
+
+# 页脚底部信息：show=显示开关；label=前缀文字 text=链接文字 url=跳转地址
+#   每项可加 show=false 单独隐藏；开关可用环境变量覆盖（部署后免改代码）：
+#   FOOTER_SHOW（整行）、FOOTER_ICP_SHOW（备案号）
+# 备案号独立 [footer.icp]
+[footer]
+show = true
+
+[[footer.items]]
+label = "CDN - "
+text = "七牛云"
+url = "https://www.qiniu.com/"
+
+[[footer.items]]
+label = "HOST - "
+text = "EdgeOne"
+url = "https://edgeone.ai/"
+
+# 备案号（独立配置）
+[footer.icp]
+show = true
+text = "黔ICP备2025044225号"
+url = "http://beian.miit.gov.cn/"
