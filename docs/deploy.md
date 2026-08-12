@@ -13,6 +13,37 @@
 | Netlify | `pnpm build:netlify` | `dist/` + `.netlify/` |
 | 腾讯云 EdgeOne | `pnpm build:edgeone`（待适配 Astro 7） | `.edgeone/` |
 
+## 部署到 Node.js（自托管 / VPS）
+
+1. **构建**（默认目标，等价于 `pnpm build:node`）
+
+   ```sh
+   pnpm build
+   ```
+
+   产物：`dist/`（`client/` 静态资源 + `server/` Node standalone 服务器）。
+
+2. **运行**
+
+   ```sh
+   node ./dist/server/entry.mjs
+   ```
+
+   默认监听 `http://localhost:4321`，可用环境变量覆盖：
+
+   ```sh
+   HOST=0.0.0.0 PORT=8080 node ./dist/server/entry.mjs
+   ```
+
+   - `HOST` — 监听地址（公网部署用 `0.0.0.0`）
+   - `PORT` — 监听端口（默认 `4321`）
+   - `SERVER_CERT_PATH` / `SERVER_KEY_PATH` — 直接启用 HTTPS 时传入证书/私钥路径（一般建议由 Nginx / Caddy 等反代做 HTTPS）
+
+3. **说明**
+   - standalone 模式会自动托管 `dist/client/` 静态资源与页面/API 路由。
+   - 自托管时可加载环境变量覆盖配置（如 `FOOTER_SHOW`、`STRAPI_URL`）：`FOOTER_SHOW=false node ./dist/server/entry.mjs`，或借助 dotenv / systemd EnvironmentFile。
+   - 生产环境建议用 **pm2** / **systemd** 守护进程，并用 Nginx / Caddy 反向代理到该端口（提供 HTTPS、日志、自动重启）。
+
 ## 部署到 Cloudflare Workers ✅（已验证可用）
 
 1. **构建**
