@@ -1,6 +1,6 @@
 # YLOVEXLN 个人主页
 
-基于 **Astro 7** 的现代化个人主页，使用 **React 19** 构建交互组件、**TailwindCSS 4** 实现样式，支持双主题切换、B站头像与直播状态展示、Markdown / Strapi 双数据源。
+基于 **Astro 6** 的现代化个人主页，使用 **React 19** 构建交互组件、**TailwindCSS 4** 实现样式，支持双主题切换、B站头像与直播状态展示、Markdown / Strapi 双数据源。
 
 ## ✨ 功能特性
 
@@ -16,7 +16,7 @@
 
 | 类别 | 技术选型 |
 | ------ | --------- |
-| 框架 | Astro 7（Islands 架构，SSR 模式） |
+| 框架 | Astro 6（Islands 架构，SSR 模式） |
 | UI 组件 | React 19 + shadcn/ui |
 | 样式 | TailwindCSS 4（CSS-first） |
 | 图标 | Font Awesome 7（品牌 + 实心） |
@@ -111,7 +111,7 @@ EdgeOne Makers 支持连接 GitHub / GitLab / Bitbucket / Gitee 仓库，推送�
    }
    ```
 
-   > `@edgeone/astro` 默认将构建产物输出到 `.edgeone/` 目录，`pnpm build:edgeone` 等价于 `cross-env DEPLOY_TARGET=edgeone astro build`。注意：Astro 7 要求 Node ≥ 22.12，EdgeOne 构建环境的 `nodeVersion` 需设为 `22.17.1` / `22.21.1` / `24.11.0` 等满足要求的预装版本（勿用 `22.11.0`）。
+   > `@edgeone/astro` 默认将构建产物输出到 `.edgeone/` 目录，`pnpm build:edgeone` 等价于 `cross-env DEPLOY_TARGET=edgeone astro build`。注意：本项目 Astro 6.4.8 要求 Node ≥ 22.12，EdgeOne 构建环境的 `nodeVersion` 需设为 `22.17.1` / `22.21.1` / `24.11.0` 等满足要求的预装版本（勿用 `22.11.0`）。
 
 2. **推送到 Git 仓库**：将代码推送到 GitHub / GitLab / Gitee 等平台。
 
