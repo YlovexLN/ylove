@@ -15,7 +15,7 @@
 ## 🛠️ 技术栈
 
 | 类别 | 技术选型 |
-|------|---------|
+| ------ | --------- |
 | 框架 | Astro 7（Islands 架构，SSR 模式） |
 | UI 组件 | React 19 + shadcn/ui |
 | 样式 | TailwindCSS 4（CSS-first） |
@@ -133,7 +133,7 @@ EdgeOne Makers 支持连接 GitHub / GitLab / Bitbucket / Gitee 仓库，推送�
 **Cloudflare Workers** 与 **EdgeOne** 均支持用环境变量覆盖 `config.toml` 中的配置，免改代码（构建时读取，修改后需重新构建部署）。
 
 | 变量 | 说明 |
-|------|------|
+| ------ | ------ |
 | `DEPLOY_TARGET` | 构建目标：`node` / `cloudflare` / `edgeone`（构建脚本已自动设置） |
 | `PAGE_MODE` | 页面模式：`single` / `scroll`（覆盖 `config.toml` 的 `mode`） |
 | `BILIBILI_UID` | B站 UID（覆盖 `config.toml` 的 `bilibili_uid`，用于头像自动获取） |
