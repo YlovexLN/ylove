@@ -31,7 +31,6 @@ pnpm-debug.log*
 .codesandbox/
 
 # pnpm files
-pnpm-workspace.yaml
 .pnpm-store
 
 # public files

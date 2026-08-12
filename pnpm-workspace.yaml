@@ -1,0 +1,23 @@
+allowBuilds:
+  esbuild: true
+  micromark: true
+  sharp: true
+  ttf2woff2: true
+  workerd: true
+minimumReleaseAgeExclude:
+  - '@astrojs/internal-helpers@0.10.2'
+  - '@astrojs/markdoc@2.0.6'
+  - '@astrojs/react@6.0.2'
+  - '@astrojs/cloudflare@14.2.1'
+  - '@astrojs/netlify@8.2.1'
+  - '@astrojs/underscore-redirects@1.0.4'
+  - astro@7.2.1
+  - '@astrojs/node@11.1.1'
+# @edgeone/astro@1.1.5 尚未适配 Astro 7，保留等待官方更新
+# 允许 @edgeone/astro 以 Astro 7 作为 peer 依赖，抑制警告（不影响构建）
+peerDependencyRules:
+  allowedVersions:
+    '@edgeone/astro>astro': '^7.0.0'
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
