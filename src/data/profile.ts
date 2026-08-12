@@ -55,6 +55,8 @@ interface RawConfig {
   name: string;
   /** 网页标题（浏览器标签页标题，不填则使用 name） */
   site_title?: string;
+  /** 网页描述（meta description，用于 SEO） */
+  site_description?: string;
   logo?: string;
   background_text?: string;
   bilibili_uid?: number;
@@ -136,6 +138,7 @@ export function getRawProfile() {
   return {
     name: config.name,
     site_title: config.site_title || config.name,
+    site_description: config.site_description || "",
     logo: config.logo || config.name,
     background_text: config.background_text || config.name,
     bilibili_uid: resolveBilibiliUid(),

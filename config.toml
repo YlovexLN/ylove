@@ -6,6 +6,9 @@ name = "YLOVEXLN"
 # 网页标题（浏览器标签页标题，不填则使用 name）
 site_title = "YLOVEXLN"
 
+# 网页描述（meta description，用于 SEO，不填则使用默认描述）
+site_description = "YLOVEXLN 的个人主页与作品集"
+
 # Logo（不填则使用 name）
 # logo = ""
 

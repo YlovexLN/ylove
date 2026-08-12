@@ -4,6 +4,8 @@
 name = "你的名字"
 # 网页标题（浏览器标签页标题，不填则使用 name）
 # site_title = "你的名字 | 个人主页"
+# 网页描述（meta description，用于 SEO）
+# site_description = "你的名字 的个人主页与作品集"
 # logo = ""
 
 # B站 UID（头像自动获取，失败时用下方 avatar；可用环境变量 BILIBILI_UID 覆盖）
