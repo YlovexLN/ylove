@@ -52,24 +52,15 @@ repository = false
 contact = false
 
 
-# ── 社交链接（可自由添加 / 删除）─────────────────────────────────────
-#
-# 每个 [[socials]] 块一个图标：添加复制一块、删除整块，顺序即显示顺序。
-#
-# name=名称 url=链接 icon=FontAwesome图标名（省略时用 name 小写匹配）
-#
-# logo=自定义图标图片地址（单色 SVG 最佳，mask 渲染，颜色自动跟随主题：灰→hover金）
-#
-# 图标库：Font Awesome 品牌图标 https://fontawesome.com/icons?d=brands&m=free
-#   常见：github / x(twitter) / linkedin / bilibili / youtube / instagram / discord /
-#   telegram / weixin / qq / npm / stackoverflow / reddit / facebook / twitch / tiktok /
-#   medium / spotify / codepen / gitlab / bitbucket / docker / figma / slack / line /
-#   zhihu / steam / mail / rss / globe / phone / headphones / kofi / patreon
-#
-# 其他平台图标（爱发电等）：Simple Icons https://cdn.simpleicons.org/{图标名}/{颜色}
-#   例：https://cdn.simpleicons.org/afdian/000000 （颜色任意，000000 黑色即可）
-#
-# show_social_icons=是否显示社交图标（false 时只显示文字，默认 true）
+# ── 社交链接（可自由添加 / 删除）─────────────────────────
+# 每个 [[socials]] 块一个图标，顺序即显示顺序。
+# name=名称 url=链接 icon=FontAwesome 图标名（省略时用 name 小写匹配）
+# logo=自定义图标图片地址（单色 SVG 最佳，颜色自动跟随主题）
+# 图标库：Font Awesome 品牌 https://fontawesome.com/icons?d=brands&m=free
+#   常见：github / x / bilibili / youtube / discord / telegram / weixin / qq / steam 等
+# 其他平台（爱发电等）：Simple Icons https://cdn.simpleicons.org/{图标名}/{颜色}
+#   例：https://cdn.simpleicons.org/afdian/000000
+# show_social_icons=是否显示社交图标（false 只显示文字，默认 true）
 show_social_icons = true
 
 [[socials]]
@@ -83,11 +74,9 @@ url = "https://space.bilibili.com/24421599"
 icon = "bilibili"
 
 
-# ── 页脚底部信息（CDN / Host / 备案等）─────────────────────────────
-#
-# show=是否显示整行（false 隐藏，默认 true）
-# 每项：label=链接前的文字（可留空） text=链接文字 url=跳转地址
-#   每项可加 show=false 单独隐藏，默认 true
+# ── 页脚底部信息（CDN / Host / 备案等）──────────────
+# show=整行开关（默认 true）
+# 每项：label=前缀文字（可空） text=链接文字 url=地址；可加 show=false 单独隐藏
 # 备案号独立配置 [footer.icp]，可用环境变量 FOOTER_ICP_SHOW 单独控制
 [footer]
 show = true
