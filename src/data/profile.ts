@@ -53,6 +53,8 @@ interface RawModules {
 
 interface RawConfig {
   name: string;
+  /** 网页标题（浏览器标签页标题，不填则使用 name） */
+  site_title?: string;
   logo?: string;
   background_text?: string;
   bilibili_uid?: number;
@@ -133,6 +135,7 @@ function resolveFooter(): RawFooter {
 export function getRawProfile() {
   return {
     name: config.name,
+    site_title: config.site_title || config.name,
     logo: config.logo || config.name,
     background_text: config.background_text || config.name,
     bilibili_uid: resolveBilibiliUid(),

@@ -3,6 +3,9 @@
 # 名称
 name = "YLOVEXLN"
 
+# 网页标题（浏览器标签页标题，不填则使用 name）
+site_title = "YLOVEXLN"
+
 # Logo（不填则使用 name）
 # logo = ""
 
