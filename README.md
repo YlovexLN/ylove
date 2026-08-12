@@ -1,6 +1,6 @@
 # YLOVEXLN 个人主页
 
-基于 **Astro 6** 的现代化个人主页，使用 **React 19** 构建交互组件、**TailwindCSS 4** 实现样式，支持双主题切换、B站头像与直播状态展示、Markdown / Strapi 双数据源。
+基于 **Astro 7** 的现代化个人主页，使用 **React 19** 构建交互组件、**TailwindCSS 4** 实现样式，支持双主题切换、B站头像与直播状态展示、Markdown / Strapi 双数据源。
 
 ## ✨ 功能特性
 
@@ -16,7 +16,7 @@
 
 | 类别 | 技术选型 |
 | ------ | --------- |
-| 框架 | Astro 6（Islands 架构，SSR 模式） |
+| 框架 | Astro 7（Islands 架构，SSR 模式） |
 | UI 组件 | React 19 + shadcn/ui |
 | 样式 | TailwindCSS 4（CSS-first） |
 | 图标 | Font Awesome 7（品牌 + 实心） |
@@ -68,9 +68,9 @@ pnpm preview     # 本地预览构建结果
 
 ## ☁️ 部署
 
-本项目为 SSR 模式（含 `/api/bili-api` 运行时接口），可直接部署到 **Cloudflare Workers** 或 **腾讯云 EdgeOne**。
+本项目为 SSR 模式（含 `/api/bili-api` 运行时接口），可直接部署到 **Cloudflare Workers**、**Netlify** 或 **腾讯云 EdgeOne**。
 
-> 💡 无需修改 `astro.config.mjs`：构建时通过环境变量 `DEPLOY_TARGET`（`cloudflare` / `edgeone` / `node`）自动选择适配器，对应脚本见下方。
+> 💡 无需修改 `astro.config.mjs`：构建时通过环境变量 `DEPLOY_TARGET`（`cloudflare` / `netlify` / `node`，`edgeone` 待官方适配 Astro 7）自动选择适配器，对应脚本见下方。
 
 ### 部署到 Cloudflare Workers
 
@@ -95,9 +95,28 @@ pnpm preview     # 本地预览构建结果
 
 > 构建参数通过项目根 `wrangler.jsonc` 配置（名称、`compatibility_date`、`nodejs_compat` 等），构建时自动合并到 `dist/server/wrangler.json`。也可在 Cloudflare 控制台通过 **Workers Builds** 连接 Git 仓库自动构建部署（构建命令 `pnpm build:cloudflare`，部署命令 `pnpm exec wrangler deploy -c dist/server/wrangler.json`）。
 
-### 部署到腾讯云 EdgeOne（Git 连接仓库）
+### 部署到 Netlify
+
+项目已内置 `@astrojs/netlify`，使用 `pnpm build:netlify` 即可生成产物（`dist/` 静态资源 + `.netlify/` SSR 函数）。
+
+1. **本地预览**：
+
+   ```sh
+   pnpm build:netlify
+   pnpm exec netlify dev
+   ```
+
+2. **推送到 Git 仓库**，然后在 [Netlify 控制台](https://app.netlify.com) 点击 **Add a new site → Import an existing project**，选择你的仓库。
+
+   > 根目录的 `netlify.toml` 已配置好构建命令（`pnpm build:netlify`）与发布目录（`dist`），Netlify 会自动读取；Node 版本通过 `.nvmrc`（24）固定。
+
+3. **环境变量**：如需用环境变量覆盖配置，在 Netlify 项目 `Site configuration → Environment variables` 中添加，见下方「环境变量」章节。
+
+### 部署到腾讯云 EdgeOne（待适配 Astro 7）
 
 EdgeOne Makers 支持连接 GitHub / GitLab / Bitbucket / Gitee 仓库，推送提交后自动构建部署。项目已内置 `@edgeone/astro`，无需修改 `astro.config.mjs`。
+
+> ⚠️ **当前状态**：`@edgeone/astro@1.1.5` 仅支持 Astro 5/6，**尚未适配 Astro 7**。本仓库已升级到 Astro 7，故暂时无法用 EdgeOne 构建部署（`pnpm build:edgeone` 会失败）。等待官方发布支持 Astro 7 的新版本后，移除 `astro.config.mjs` 中的适配器即可恢复使用。
 
 1. **创建 `edgeone.json`**（可选，也可在控制台构建配置中填写）：
 
@@ -111,7 +130,7 @@ EdgeOne Makers 支持连接 GitHub / GitLab / Bitbucket / Gitee 仓库，推送�
    }
    ```
 
-   > `@edgeone/astro` 默认将构建产物输出到 `.edgeone/` 目录，`pnpm build:edgeone` 等价于 `cross-env DEPLOY_TARGET=edgeone astro build`。注意：本项目 Astro 6.4.8 要求 Node ≥ 22.12，EdgeOne 构建环境的 `nodeVersion` 需设为 `22.17.1` / `22.21.1` / `24.11.0` 等满足要求的预装版本（勿用 `22.11.0`）。
+   > `@edgeone/astro` 默认将构建产物输出到 `.edgeone/` 目录，`pnpm build:edgeone` 等价于 `cross-env DEPLOY_TARGET=edgeone astro build`。注意：Astro 7 要求 Node ≥ 22.12，EdgeOne 构建环境的 `nodeVersion` 需设为 `22.17.1` / `22.21.1` / `24.11.0` 等满足要求的预装版本（勿用 `22.11.0`）。
 
 2. **推送到 Git 仓库**：将代码推送到 GitHub / GitLab / Gitee 等平台。
 
@@ -130,11 +149,11 @@ EdgeOne Makers 支持连接 GitHub / GitLab / Bitbucket / Gitee 仓库，推送�
 
 ### 环境变量（覆盖配置文件）
 
-**Cloudflare Workers** 与 **EdgeOne** 均支持用环境变量覆盖 `config.toml` 中的配置，免改代码（构建时读取，修改后需重新构建部署）。
+**Cloudflare Workers**、**Netlify** 与 **EdgeOne** 均支持用环境变量覆盖 `config.toml` 中的配置，免改代码（构建时读取，修改后需重新构建部署）。
 
 | 变量 | 说明 |
 | ------ | ------ |
-| `DEPLOY_TARGET` | 构建目标：`node` / `cloudflare` / `edgeone`（构建脚本已自动设置） |
+| `DEPLOY_TARGET` | 构建目标：`node` / `cloudflare` / `netlify` / `edgeone`（构建脚本已自动设置） |
 | `PAGE_MODE` | 页面模式：`single` / `scroll`（覆盖 `config.toml` 的 `mode`） |
 | `BILIBILI_UID` | B站 UID（覆盖 `config.toml` 的 `bilibili_uid`，用于头像自动获取） |
 | `STRAPI_URL` / `STRAPI_TOKEN` | Strapi 数据源地址与 Token（`content_source = "strapi"` 时使用） |
@@ -147,6 +166,8 @@ EdgeOne Makers 支持连接 GitHub / GitLab / Bitbucket / Gitee 仓库，推送�
 
 - **Workers Builds（Git 连接）**：控制台 `Workers & Pages` → 项目 → `Settings` → `Variables and Secrets`
 - **本地 wrangler**：构建时注入开关变量（如 PowerShell：`$env:FOOTER_SHOW='false'`），或写入 `wrangler.jsonc` 的 `vars`；敏感值用 `pnpm exec wrangler secret put STRAPI_TOKEN`
+
+**Netlify** 设置方式：项目 `Site configuration → Environment variables` 中添加变量与值，重新 Deploy 生效。
 
 **EdgeOne** 设置方式：
 
@@ -163,6 +184,7 @@ EdgeOne Makers 支持连接 GitHub / GitLab / Bitbucket / Gitee 仓库，推送�
 
 - [Astro 官方文档](https://docs.astro.build)
 - [Astro 部署到 Cloudflare](https://docs.astro.build/en/guides/deploy/cloudflare/)
+- [Astro 部署到 Netlify](https://docs.astro.build/en/guides/deploy/netlify/)
 - [EdgeOne Astro 框架指南](https://pages.edgeone.ai/document/framework-astro)
 - [EdgeOne 导入 Git 仓库](https://pages.edgeone.ai/document/importing-a-git-repository)
 - [EdgeOne `edgeone.json` 配置](https://pages.edgeone.ai/document/edgeone-json)

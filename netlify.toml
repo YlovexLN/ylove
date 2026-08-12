@@ -1,0 +1,18 @@
+# Netlify 部署配置
+# 说明：本项目通过 DEPLOY_TARGET 环境变量选择适配器，
+# 因此构建命令必须使用 build:netlify（等价于 cross-env DEPLOY_TARGET=netlify astro build）。
+# 静态资源输出到 dist/，SSR 函数由 @astrojs/netlify 自动生成到 .netlify/。
+[build]
+  command = "pnpm build:netlify"
+  publish = "dist"
+
+# 构建环境变量（构建时内联进产物，改动后需重新部署）
+[build.environment]
+  DEPLOY_TARGET = "netlify"
+  # 页脚/内容开关（可留空使用默认值）
+  # FOOTER_SHOW = "true"
+  # FOOTER_ICP_SHOW = "false"
+  PAGE_MODE = "single"
+  BILIBILI_UID = "24421599"
+  # STRAPI_URL = ""
+  # STRAPI_TOKEN = ""

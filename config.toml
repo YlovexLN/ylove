@@ -79,18 +79,8 @@ icon = "github"
 
 [[socials]]
 name = "bilibili"
-url = "https://space.bilibili.com/"
+url = "https://space.bilibili.com/24421599"
 icon = "bilibili"
-
-[[socials]]
-name = "猫耳FM"
-url = "https://www.missevan.com/"
-icon = "headphones"
-
-[[socials]]
-name = "爱发电"
-url = "https://afdian.com/"
-logo = "https://cdn.simpleicons.org/afdian/000000"
 
 
 # ── 页脚底部信息（CDN / Host / 备案等）─────────────────────────────

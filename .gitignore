@@ -2,7 +2,8 @@
 dist/
 .edgeone/
 .wrangler/
-    
+.netlify/
+
 # generated types
 .astro/
 

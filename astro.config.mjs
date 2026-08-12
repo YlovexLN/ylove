@@ -4,11 +4,13 @@ import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 import node from '@astrojs/node';
 import cloudflare from '@astrojs/cloudflare';
+import netlify from '@astrojs/netlify';
 import edgeone from '@edgeone/astro';
 
 // 部署目标：通过环境变量选择，构建时无需修改本文件
-//   DEPLOY_TARGET=cloudflare → Cloudflare Workers（产物 dist/_worker.js）
-//   DEPLOY_TARGET=edgeone    → EdgeOne Makers（产物 .edgeone/）
+//   DEPLOY_TARGET=cloudflare → Cloudflare Workers（产物 dist/client + dist/server）
+//   DEPLOY_TARGET=netlify    → Netlify Functions（产物 dist/ + .netlify/）
+//   DEPLOY_TARGET=edgeone    → EdgeOne Makers（产物 .edgeone/，等官方适配 Astro 7）
 //   其他（默认）              → Node.js Standalone（本地开发 / 自托管）
 const deployTarget = process.env.DEPLOY_TARGET || 'node';
 
@@ -17,8 +19,14 @@ function resolveAdapter() {
   switch (deployTarget) {
     case 'cloudflare':
       return cloudflare();
+    case 'netlify':
+      return netlify();
     case 'edgeone':
-      return edgeone();
+      // ⚠️ @edgeone/astro@1.1.5 仅支持 Astro 5/6，尚未适配 Astro 7，
+      // 构建会失败，等待官方发布新版本后再启用
+      return edgeone({
+        includeFiles: ['node_modules/clsx/**'],
+      });
     default:
       return node({ mode: 'standalone' });
   }
@@ -31,9 +39,8 @@ export default defineConfig({
   adapter: resolveAdapter(),
   vite: {
     plugins: [tailwindcss()],
-    // 跳过对 Font Awesome 大图标包的预打包，缩短启动时间
-    // 本项目按需导入的图标很少，浏览器实际加载的模块有限，影响可忽略
     optimizeDeps: {
+      // 跳过对 Font Awesome 大图标包的预打包，缩短 dev 启动时间
       exclude: [
         '@fortawesome/free-brands-svg-icons',
         '@fortawesome/free-solid-svg-icons',

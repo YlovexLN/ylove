@@ -7,10 +7,11 @@
 `astro.config.mjs` 通过环境变量 `DEPLOY_TARGET` 在构建时自动选择适配器，**无需修改配置文件**。
 
 | 目标 | 命令 | 产物 |
-|------|------|------|
+| --- | --- | --- |
 | Node（本地 / 自托管） | `pnpm build` / `pnpm build:node` | `dist/` |
 | Cloudflare Workers | `pnpm build:cloudflare` | `dist/client` + `dist/server` |
-| 腾讯云 EdgeOne | `pnpm build:edgeone` | `.edgeone/` |
+| Netlify | `pnpm build:netlify` | `dist/` + `.netlify/` |
+| 腾讯云 EdgeOne | `pnpm build:edgeone`（待适配 Astro 7） | `.edgeone/` |
 
 ## 部署到 Cloudflare Workers ✅（已验证可用）
 
@@ -34,9 +35,35 @@
    - 环境变量（如 `STRAPI_URL`）：`pnpm exec wrangler secret put STRAPI_URL`。
    - 已通过 `wrangler deploy --dry-run` 验证（24 个 server 模块 + 25 个静态资源 + KV/Images/Assets 绑定正常）。
 
-## 部署到腾讯云 EdgeOne ✅（已验证可用）
+## 部署到 Netlify ✅（已验证可用）
 
-- 构建：`pnpm build:edgeone`，产物 `.edgeone/`（`assets/` + `cloud-functions/`）
+1. **构建**
+
+   ```sh
+   pnpm build:netlify
+   ```
+
+   产物：`dist/`（静态资源）+ `.netlify/`（SSR 函数，由 `@astrojs/netlify` 自动生成）。
+
+2. **本地预览**
+
+   ```sh
+   pnpm exec netlify dev
+   ```
+
+3. **部署**
+   - 推送到 Git 仓库后，在 [Netlify 控制台](https://app.netlify.com) → **Add a new site → Import an existing project** 导入仓库。
+   - 根目录 `netlify.toml` 已配置构建命令（`pnpm build:netlify`）与发布目录（`dist`），`.nvmrc`（24）固定 Node 版本，Netlify 自动读取。
+
+4. **说明**
+   - 环境变量（如 `STRAPI_URL`）在 Netlify 项目 `Site configuration → Environment variables` 中配置，修改后重新 Deploy 生效。
+   - SSR 函数入口验证：`.netlify/build/entry.mjs` 正确导出 `createHandler`（`function`）。
+
+## 部署到腾讯云 EdgeOne ⏳（待官方适配 Astro 7）
+
+> **当前状态**：`@edgeone/astro@1.1.5` 仅支持 Astro 5 / 6，**尚未适配 Astro 7**。本项目已升级到 Astro 7，因此 `pnpm build:edgeone` 会失败。等待官方发布支持 Astro 7 的新版本后，移除 `astro.config.mjs` 中 `resolveAdapter()` 的 `edgeone` 分支注释即可恢复。
+
+- 构建：`pnpm build:edgeone`（当前不可用），产物 `.edgeone/`（`assets/` + `cloud-functions/`）
 - 项目配置：`edgeone.json`
 
   ```json
@@ -55,11 +82,11 @@
 
 ## 环境变量（覆盖配置文件）
 
-`Cloudflare Workers` 与 `EdgeOne` 均支持用环境变量覆盖 `config.toml` 中的配置，免改代码。构建时读取，修改后需**重新构建部署**生效。
+`Cloudflare Workers`、`Netlify` 与 `EdgeOne` 均支持用环境变量覆盖 `config.toml` 中的配置，免改代码。构建时读取，修改后需**重新构建部署**生效。
 
 | 变量 | 说明 |
-|------|------|
-| `DEPLOY_TARGET` | 构建目标：`node` / `cloudflare` / `edgeone`（构建脚本已自动设置） |
+| --- | --- |
+| `DEPLOY_TARGET` | 构建目标：`node` / `cloudflare` / `netlify` / `edgeone`（构建脚本已自动设置） |
 | `PAGE_MODE` | 页面模式：`single` / `scroll` |
 | `BILIBILI_UID` | B站 UID |
 | `STRAPI_URL` / `STRAPI_TOKEN` | Strapi 数据源地址与 Token |
@@ -70,15 +97,15 @@
 
 ## 已知问题与排查
 
-### `@edgeone/astro` 与 Astro 版本兼容性（已解决）
+### `@edgeone/astro` 与 Astro 版本兼容性
 
-- **历史问题**：`@edgeone/astro@1.1.5` 只支持 Astro 5 / 6（peer `^5.0.0 || ^6.0.0`），**不支持 Astro 7**。在 Astro 7 下部署会报 `502: CLOUD_FUNCTION_INVOCATION_FAILED`，根因是 Astro 7 生成的 SSR 入口 `entry.mjs` 的 `default` 为 `undefined`（产物为 `createExports` 形态），而 `@edgeone/astro` 的 `handler.js` 固定 `import('entry.mjs').default` 后调用 → 崩溃。
-- **解决方案（已应用）**：将项目降级到 **Astro 6.4.8**，并同步降级 `@astrojs/cloudflare` 到 13.x、`@astrojs/node` 到 10.x。降级后三个目标（node / cloudflare / edgeone）均构建通过，EdgeOne 入口 `default` 正常导出。
-- **注意**：若日后升级 Astro 7，需等 `@edgeone/astro` 官方支持 Astro 7 后再升级。
+- **历史**：`@edgeone/astro@1.1.5` 只支持 Astro 5 / 6（peer `^5.0.0 || ^6.0.0`），**不支持 Astro 7**。在 Astro 7 下部署会报 `502: CLOUD_FUNCTION_INVOCATION_FAILED`，根因是 Astro 7 生成的 SSR 入口 `entry.mjs` 的 `default` 为 `undefined`（产物为 `createExports` 形态），而 `@edgeone/astro` 的 `handler.js` 固定 `import('entry.mjs').default` 后调用 → 崩溃。
+- **曾用方案**：降级到 Astro 6.4.8（`@astrojs/cloudflare` 13.x、`@astrojs/node` 10.x）可让 EdgeOne 正常构建部署。
+- **当前方案（已应用）**：升级回 **Astro 7.2.1**，`@astrojs/cloudflare` 14.2.1、`@astrojs/node` 11.1.1，并新增 `@astrojs/netlify` 8.2.1。EdgeOne 适配器保留但暂不可用，等待官方支持 Astro 7。
 
 ### EdgeOne 构建环境 Node 版本
 
-- 本项目 Astro 6.4.8 要求 Node ≥ 22.12，EdgeOne 构建环境的 `nodeVersion` **不能设为 `22.11.0`**，应使用预装版本 `22.17.1` / `22.21.1` / `24.11.0` 等。
+- Astro 7 要求 Node ≥ 22.12，EdgeOne 构建环境的 `nodeVersion` **不能设为 `22.11.0`**，应使用预装版本 `22.17.1` / `22.21.1` / `24.11.0` 等。
 - EdgeOne 的 `outputDirectory` 必须指向 `.edgeone`（`@edgeone/astro` 适配器的产物目录），不是 `dist`。
 
 ### 其他注意事项
