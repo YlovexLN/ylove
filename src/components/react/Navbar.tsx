@@ -38,9 +38,6 @@ export default function Navbar() {
 
   const isEndfield = theme === "EndField";
   const expanded = hovered;
-  // 是否在首页（非首页时导航锚点需带 / 前缀，跳回首页对应区块）
-  const isHome =
-    typeof window === "undefined" || window.location.pathname === "/";
 
   // 同步 CSS 变量
   const sidebarW = expanded ? 224 : 56;
@@ -118,52 +115,6 @@ export default function Navbar() {
             />
           </div>
 
-          {/* 中间导航 */}
-          <nav
-            className="flex flex-col gap-3 text-xs font-mono tracking-widest uppercase whitespace-nowrap -mt-20 overflow-hidden"
-            style={{ color: "rgba(0,0,0,0.55)" }}
-          >
-            {[
-              { label: "Profile", icon: "◈", slug: "profile", key: "profile" },
-              { label: "Works", icon: "⚡", slug: "works", key: "works" },
-              { label: "Repository", icon: "◫", slug: "repository", key: "repository" },
-              { label: "Contact", icon: "✉", slug: "contact", key: "contact" },
-            ]
-              .filter((item) => profile.modules[item.key as keyof typeof profile.modules] !== false)
-              .map((item) => (
-              <a
-                key={item.label}
-                href={
-                  profile.mode === "scroll"
-                    ? `${isHome ? "" : "/"}#${item.slug}`
-                    : "#"
-                }
-                className="flex items-center gap-2 py-1 whitespace-nowrap"
-                style={{
-                  color: "rgba(0,0,0,0.55)",
-                  transition: "color 0.2s",
-                  paddingLeft: expanded ? 0 : 4,
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#000000")}
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.color = "rgba(0,0,0,0.55)")
-                }
-              >
-                <span className="text-xs" style={{ color: "rgba(0,0,0,0.4)" }}>
-                  {item.icon}
-                </span>
-                <span
-                  style={{
-                    opacity: expanded ? 1 : 0,
-                    transition: "opacity 0.2s ease",
-                  }}
-                >
-                  {item.label}
-                </span>
-              </a>
-            ))}
-          </nav>
-
           {/* 底部 */}
           <div className="pb-6 overflow-hidden">
             <div
@@ -177,7 +128,7 @@ export default function Navbar() {
             />
             <div style={{ overflow: expanded ? "visible" : "hidden" }}>
               <div
-                className="flex items-center justify-center gap-3"
+                className="flex flex-col items-center justify-center gap-3"
                 style={{ padding: expanded ? "0" : "0 6px" }}
               >
                 {GITHUB_URL && (
