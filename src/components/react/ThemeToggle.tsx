@@ -37,10 +37,10 @@ export default function ThemeToggle({ compact }: Props) {
   return (
     <button
       onClick={toggle}
-      className={`btn-texture flex items-center rounded-lg border transition-all duration-200 ${
+      className={`btn-texture flex items-center rounded-lg border transition-all duration-200 hover:scale-105 active:scale-95 ${
         compact
           ? "gap-0 py-1.5 border-transparent bg-black text-white w-full justify-center"
-          : "gap-2 px-2.5 py-1.5 border border-border-default text-xs text-text-muted hover:text-text-primary hover:border-border-hover bg-black text-white"
+          : "gap-2 px-2.5 py-1.5 border border-border-default text-xs text-white hover:text-gold hover:border-gold bg-black"
       }`}
       aria-label={`Switch to ${theme === "MiniMal" ? "EndField" : "MiniMal"} theme`}
     >
