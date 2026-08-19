@@ -75,9 +75,36 @@ url = "https://github.com/YlovexLN/"
 icon = "github"
 
 [[socials]]
-name = "bilibili"
+name = "BiliBili"
 url = "https://space.bilibili.com/24421599"
 icon = "bilibili"
+
+[[socials]]
+name = "请我喝奶茶/赞助"
+url = "/sponsor"
+icon = "coffee"
+
+
+# ── 赞助页面（/sponsor）────────────────────────────────
+# 标题 / 副标题（页面文案，可自由修改）
+# 微信 / 支付宝收款码（图片放 public/sponsor/ 下，不填则显示「二维码制作中」占位）
+# 爱发电跳转链接（留空则不显示）
+
+[sponsor]
+title = "请我喝杯奶茶"
+
+# 多行字符串（三引号）：换行会真实显示，页面上分成两行
+subtitle = """如果我的内容对你有帮助，欢迎赞助支持～
+你的支持是我持续创作的动力！"""
+
+# 收款方式：填收款链接 → 页面在浏览器端自动生成纯二维码（无需服务器/命令）
+#           填收款码图片路径 → 直接显示图片（图片优先于链接）
+
+wechat_link = "wxp://f2f0diwT6TgadUhGzIEcgxy7jUDHqmDCW7QIgwz2YC-EA3Y"
+alipay_link = "https://qr.alipay.com/fkx18009udaifvmfco7lu2c?0&T=58602-01-16"
+wechat_qr = ""
+alipay_qr = ""
+afdian_url = "https://afdian.com/a/ylove"
 
 
 # ── 页脚底部信息（CDN / Host / 备案等）──────────────
