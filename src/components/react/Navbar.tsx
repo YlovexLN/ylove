@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import ThemeToggle from "@/components/react/ThemeToggle";
 import { profile } from "@/data/profile";
 
@@ -6,6 +8,9 @@ function getCurrentTheme(): string {
   if (typeof document === "undefined") return "MiniMal";
   return document.documentElement.getAttribute("data-theme") || "MiniMal";
 }
+
+// GitHub 仓库地址（固定链接，指向仓库页）
+const GITHUB_URL = "https://github.com/YlovexLN/ylove";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -171,7 +176,32 @@ export default function Navbar() {
               }}
             />
             <div style={{ overflow: expanded ? "visible" : "hidden" }}>
-              <div style={{ padding: expanded ? "0" : "0 6px" }}>
+              <div
+                className="flex items-center justify-center gap-3"
+                style={{ padding: expanded ? "0" : "0 6px" }}
+              >
+                {GITHUB_URL && (
+                  <a
+                    href={GITHUB_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="GitHub"
+                    className="transition-colors"
+                    style={{
+                      color: "rgba(0,0,0,0.55)",
+                      opacity: expanded ? 1 : 0.8,
+                      transition: "color 0.2s, opacity 0.2s",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.color = "#000000")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.color = "rgba(0,0,0,0.55)")
+                    }
+                  >
+                    <FontAwesomeIcon icon={faGithub} className="h-5! w-5!" />
+                  </a>
+                )}
                 <ThemeToggle compact={!expanded} />
               </div>
             </div>
@@ -197,7 +227,20 @@ export default function Navbar() {
         >
           {profile.logo}
         </a>
-        <ThemeToggle />
+        <div className="flex items-center gap-3">
+          {GITHUB_URL && (
+            <a
+              href={GITHUB_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub"
+              className="text-text-secondary hover:text-gold transition-colors"
+            >
+              <FontAwesomeIcon icon={faGithub} className="h-5! w-5!" />
+            </a>
+          )}
+          <ThemeToggle />
+        </div>
       </nav>
     </header>
   );
