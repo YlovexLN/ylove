@@ -33,6 +33,9 @@ export default function Navbar() {
 
   const isEndfield = theme === "EndField";
   const expanded = hovered;
+  // 是否在首页（非首页时导航锚点需带 / 前缀，跳回首页对应区块）
+  const isHome =
+    typeof window === "undefined" || window.location.pathname === "/";
 
   // 同步 CSS 变量
   const sidebarW = expanded ? 224 : 56;
@@ -125,7 +128,11 @@ export default function Navbar() {
               .map((item) => (
               <a
                 key={item.label}
-                href={profile.mode === "scroll" ? `#${item.slug}` : "#"}
+                href={
+                  profile.mode === "scroll"
+                    ? `${isHome ? "" : "/"}#${item.slug}`
+                    : "#"
+                }
                 className="flex items-center gap-2 py-1 whitespace-nowrap"
                 style={{
                   color: "rgba(0,0,0,0.55)",
