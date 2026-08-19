@@ -42,6 +42,7 @@ import {
   faPodcast,
   faRadio,
   faChevronDown,
+  faMugHot,
 } from "@fortawesome/free-solid-svg-icons";
 import { useLivePulse } from "@/hooks/useLivePulse";
 import { getRingStyle } from "@/utils/live-ring";
@@ -89,6 +90,11 @@ const socialIconMap: Record<string, IconDefinition> = {
   kofi: faKoFi,
   "ko-fi": faKoFi,
   patreon: faPatreon,
+  // 咖啡 / 奶茶
+  coffee: faMugHot,
+  mug: faMugHot,
+  "mug-hot": faMugHot,
+  "milk-tea": faMugHot,
   // 实心图标
   mail: faEnvelope,
   email: faEnvelope,
@@ -316,12 +322,14 @@ export default function Hero({
           {socials.map((social) => {
             const IconComp =
               socialIconMap[social.icon.toLowerCase()] || faGlobe;
+            // 站内链接（以 / 开头）在当前标签页打开，外部链接新开标签页
+            const isInternal = social.url.startsWith("/");
             return (
               <a
                 key={social.name}
                 href={social.url}
-                target="_blank"
-                rel="noopener noreferrer"
+                target={isInternal ? undefined : "_blank"}
+                rel={isInternal ? undefined : "noopener noreferrer"}
                 className="inline-flex items-center gap-2 rounded-full border border-border-default bg-bg-card px-3 py-2 text-sm text-text-secondary transition-all duration-200 hover:border-gold/30 hover:bg-bg-card-hover hover:text-gold"
                 aria-label={social.name}
               >
