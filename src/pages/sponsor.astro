@@ -1,0 +1,17 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Navbar from "@/components/react/Navbar";
+import Footer from "@/components/react/Footer";
+import SponsorContent from "@/components/react/SponsorContent";
+import { profile } from "@/data/profile";
+import { sponsor } from "@/data/sponsor";
+
+const title = `${sponsor.title} | ${profile.site_title}`;
+const description = sponsor.subtitle;
+---
+
+<Layout title={title} description={description}>
+  <Navbar client:load />
+  <SponsorContent client:load sponsor={sponsor} />
+  <Footer client:visible footerInfo={profile.footer} />
+</Layout>
