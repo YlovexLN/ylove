@@ -14,6 +14,7 @@
   --color-text-primary: #f5f5f5;
   --color-text-secondary: #a0a0a0;
   --color-text-muted: #666666;
+  --color-btn-default: #c4c4c4;
   --color-gold: #d4a843;
   --color-gold-light: #f0d68a;
   --color-gold-dark: #b8932e;
@@ -311,12 +312,43 @@ body {
   min-height: 100vh !important;
 }
 [data-theme="EndField"] main h1,
+[data-theme="EndField"] main h2,
 [data-theme="EndField"] main p,
 [data-theme="EndField"] main .text-text-secondary {
   color: #333333 !important;
 }
 [data-theme="EndField"] main .text-gold {
   color: #d4a843 !important;
+}
+/* Hero 社交按钮 — HUD 深色卡片 + 浅色文字（覆盖 main .text-text-secondary 的深色强制） */
+[data-theme="EndField"] main a.inline-flex.rounded-full.bg-bg-card {
+  color: #e2e6ee !important;
+  border-color: rgba(46, 42, 38, 0.9);
+}
+[data-theme="EndField"] main a.inline-flex.rounded-full.bg-bg-card:hover {
+  color: #fffa00 !important;
+  border-color: rgba(255, 250, 0, 0.6) !important;
+  background: rgba(30, 30, 30, 0.96) !important;
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 24px -10px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 250, 0, 0.12),
+    0 0 18px rgba(255, 250, 0, 0.1);
+}
+/* MiniMal 社交按钮悬停 — 上浮 + 阴影 + 金色边框 */
+[data-theme="MiniMal"] main a.inline-flex.rounded-full.bg-bg-card:hover {
+  border-color: rgba(212, 168, 67, 0.4) !important;
+  background: rgba(26, 26, 26, 0.98) !important;
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 24px -10px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(212, 168, 67, 0.1);
+}
+/* EndField works 卡片内文字 — HUD 深色卡片 + 浅色文字（覆盖 main p / .text-text-secondary 的深色强制） */
+[data-theme="EndField"] main .rounded-xl.border.bg-bg-card p,
+[data-theme="EndField"] main .rounded-xl.border.bg-bg-card .text-text-secondary,
+[data-theme="EndField"] main .rounded-xl.border.bg-bg-card span {
+  color: #e2e6ee !important;
 }
 /* 隐藏 Hero 的装饰网格线 */
 [data-theme="EndField"] section:first-of-type > div:first-child {
