@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "atDirectives": [
+    {
+      "name": "@theme",
+      "description": "Tailwind CSS v4 主题变量定义。在 @theme 中定义的颜色、字体、动画等会被扫描并生成对应的 Tailwind 工具类（如 --color-gold 生成 text-gold / bg-gold）。"
+    },
+    {
+      "name": "@apply",
+      "description": "Tailwind CSS 指令：将工具类内联到自定义 CSS 中。"
+    },
+    {
+      "name": "@reference",
+      "description": "Tailwind CSS 指令：引用其他文件中的主题变量。"
+    },
+    {
+      "name": "@utility",
+      "description": "Tailwind CSS v4 指令：定义自定义工具类。"
+    },
+    {
+      "name": "@variant",
+      "description": "Tailwind CSS v4 指令：定义自定义变体。"
+    },
+    {
+      "name": "@custom-variant",
+      "description": "Tailwind CSS v4 指令：定义自定义变体。"
+    },
+    {
+      "name": "@source",
+      "description": "Tailwind CSS v4 指令：声明内容扫描来源。"
+    },
+    {
+      "name": "@config",
+      "description": "Tailwind CSS 指令：指定配置文件。"
+    },
+    {
+      "name": "@tailwind",
+      "description": "Tailwind CSS 指令：注入 Tailwind 的基础、组件、工具类层。"
+    },
+    {
+      "name": "@import",
+      "description": "导入其他 CSS 文件。Tailwind v4 通过 @import \"tailwindcss\" 引入。"
+    }
+  ],
+  "properties": [],
+  "pseudoClasses": [],
+  "pseudoElements": [],
+  "cssVariables": [],
+  "selectors": []
+}
