@@ -4,6 +4,8 @@ allowBuilds:
   sharp: true
   ttf2woff2: true
   workerd: true
+# 使用项目本地 store（与 node_modules 现有链接的 store 保持一致）
+storeDir: .pnpm-store
 minimumReleaseAgeExclude:
   - '@astrojs/internal-helpers@0.10.2'
   - '@astrojs/markdoc@2.0.6'
