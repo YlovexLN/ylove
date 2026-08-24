@@ -174,7 +174,7 @@ export default function SponsorContent({ sponsor }: SponsorContentProps) {
               WebkitMaskRepeat: "no-repeat",
             }}
           />
-          前往爱发电赞助
+          前往爱发电赞助（还在认证创作者中）
           <FontAwesomeIcon icon={faArrowRight} className="h-4 w-4" />
         </a>
       )}
