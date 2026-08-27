@@ -24,7 +24,7 @@ export default function Projects() {
           {projects.map((project, index) => (
             <div
               key={project.title}
-              className="group rounded-xl border border-border-default bg-bg-card p-6 transition-all duration-300 hover:border-gold/20 hover:bg-bg-card-hover hover:shadow-[0_0_30px_rgba(212,168,67,0.05)]"
+              className="group rounded-xl border border-border-default bg-bg-card p-6 transition-all duration-300 hover:border-gold/20 hover:bg-bg-card-hover hover:shadow-[0_0_30px_rgba(52,211,153,0.05)]"
               style={{
                 animation: `slide-up 0.6s ease-out ${0.1 * index}s forwards`,
                 opacity: 0,

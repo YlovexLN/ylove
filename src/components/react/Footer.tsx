@@ -1,6 +1,3 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHeart } from "@fortawesome/free-solid-svg-icons";
-
 interface FooterInfoItem {
   /** 链接前的文字（如 "CDN - "） */
   label?: string;
@@ -37,10 +34,8 @@ export default function Footer({ footerInfo }: FooterProps) {
       <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-text-muted sm:text-sm">
         <span>&copy; {new Date().getFullYear()} YlovexLN. All rights reserved.</span>
         <span className="hidden sm:inline text-border-default">·</span>
-        <span className="inline-flex items-center gap-1">
-          Built with
-          <FontAwesomeIcon icon={faHeart} className="h-3 w-3 text-gold" />
-          Astro &amp; React
+        <span>
+          Powered by <span className="text-gold font-medium">Astro &amp; React</span>
         </span>
         {showFooterInfo && (
           <>
