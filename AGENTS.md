@@ -29,6 +29,9 @@ pnpm astro dev --background
 | Cloudflare   | `pnpm build:cloudflare` | `dist/client` + `dist/server`     |
 | Netlify      | `pnpm build:netlify`    | `dist/` + `.netlify/`             |
 | EdgeOne      | `pnpm build:edgeone`    | `.edgeone/`（待官方适配 Astro 7） |
+| ESA          | `pnpm build:esa`        | `dist/`（Pages 静态托管 + 边缘函数） |
+
+**ESA（阿里云函数和Pages）说明**：官方仅支持 Astro 静态站点生成模式（`output: 'static'`）。`pnpm build:esa` 走 `scripts/esa-build.mjs`：构建前临时移出 SSR 端点 `src/pages/api/bili-api.ts`（静态模式不允许存在，构建后自动恢复），动态接口由边缘函数 `esa/functions/bili-api.ts` 提供（Web Worker API 风格，无 Buffer/process）。仓库根目录 `esa.jsonc` 配置 `entry`（边缘函数）+ `assets.directory`（静态目录），GitHub 仓库自动构建部署。构建所需环境变量（`BILIBILI_UID` 等）需在 ESA 控制台「构建信息 → 环境变量」配置，Node 版本选择 ≥ 22。
 
 ## 项目结构
 

@@ -1,0 +1,14 @@
+{
+  // 阿里云 ESA 函数和Pages 构建配置（优先级高于控制台配置，修改后需推送到仓库重新构建）
+  // 文档：https://help.aliyun.com/zh/edge-security-acceleration/esa/user-guide/what-is-functions-and-pages
+  "name": "ylove",
+  // 边缘函数入口：处理 /api/bili-api（头像代理 + 直播检测），运行时为 Web Worker API 风格
+  "entry": "./esa/functions/bili-api.ts",
+  "installCommand": "pnpm install",
+  "buildCommand": "npm run build:esa",
+  "assets": {
+    // 静态托管目录（Astro 静态构建产物）
+    "directory": "./dist"
+    // 未配置 notFoundStrategy（默认模式）：静态资源优先 → 未命中走边缘函数 → 404
+  }
+}

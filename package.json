@@ -12,6 +12,7 @@
     "build:cloudflare": "cross-env DEPLOY_TARGET=cloudflare astro build",
     "build:edgeone": "cross-env DEPLOY_TARGET=edgeone astro build",
     "build:netlify": "cross-env DEPLOY_TARGET=netlify astro build",
+    "build:esa": "node scripts/esa-build.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },
