@@ -29,9 +29,6 @@ titles = [
 # 打字机速度（毫秒/字，数值越大越慢，默认 120）
 typewriter_speed = 250
 
-# 背景滚动文字（仅End主题 不填则使用 name）
-# background_text = ""
-
 # 页面模式（single=单页只显示Hero+导航+页脚，scroll=可往下滚动展示模块）
 # 可用环境变量 PAGE_MODE 覆盖
 mode = "scroll"
@@ -62,6 +59,7 @@ contact = false
 # 每个 [[socials]] 块一个图标，顺序即显示顺序。
 # name=名称 url=链接 icon=FontAwesome 图标名（省略时用 name 小写匹配）
 # logo=自定义图标图片地址（单色 SVG 最佳，颜色自动跟随主题）
+# show=是否显示该项（false 单独隐藏，默认 true）
 # 图标库：Font Awesome 品牌 https://fontawesome.com/icons?d=brands&m=free
 #   常见：github / x / bilibili / youtube / discord / telegram / weixin / qq / steam 等
 # 其他平台（爱发电等）：Simple Icons https://cdn.simpleicons.org/{图标名}/{颜色}
@@ -79,10 +77,15 @@ name = "BiliBili"
 url = "https://space.bilibili.com/24421599"
 icon = "bilibili"
 
-# [[socials]]
-# name = "请我喝奶茶/赞助"
-# url = "/sponsor"
-# icon = "coffee"
+# 赞助入口（跳转 /sponsor 赞助页）
+# 开关：show=false 隐藏入口，且 /sponsor 页面也无法直接访问（跳回首页）
+# 也可用构建环境变量 SPONSOR_SHOW=false 覆盖（各平台生效）
+[[socials]]
+name = "请我喝奶茶/赞助"
+# 开关：false 时不在首页显示该链接（默认 true）
+show = true
+url = "/sponsor"
+icon = "coffee"
 
 
 # ── 赞助页面（/sponsor）────────────────────────────────
@@ -114,14 +117,14 @@ afdian_url = "https://afdian.com/a/ylove"
 show = true
 
 [[footer.items]]
-label = "CDN - "
+label = "IMAGESCDN - "
 text = "七牛云"
 url = "https://www.qiniu.com/"
 
 [[footer.items]]
-label = "HOST - "
-text = "EdgeOne"
-url = "https://edgeone.ai/"
+label = "WEBCDN - "
+text = "ESA"
+url = "https://www.aliyun.com/product/esa"
 
 # 备案号（独立配置，FOOTER_ICP_SHOW=false 可单独隐藏）
 [footer.icp]

@@ -18,9 +18,6 @@ titles = ["你好，世界", "欢迎来到我的主页"]
 # 打字机速度（毫秒/字，默认 120）
 typewriter_speed = 120
 
-# 背景滚动文字（仅 End 主题，不填用 name）
-# background_text = ""
-
 # 页面模式：single=仅Hero+导航+页脚，scroll=可滚动展示模块（可用环境变量 PAGE_MODE 覆盖）
 mode = "scroll"
 
@@ -57,6 +54,7 @@ contact = true
 
 # 社交链接：每个 [[socials]] 一条
 #   icon=FontAwesome 图标名；logo=自定义图标图片地址（优先级更高）
+#   show=false 单独隐藏该项（默认 true）
 #   图标库 https://fontawesome.com/icons?d=brands&m=free
 [[socials]]
 name = "GitHub"
