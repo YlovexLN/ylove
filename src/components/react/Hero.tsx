@@ -327,7 +327,6 @@ export default function Hero({
               >
                 {showSocialIcons &&
                   (social.logo ? (
-                    // 用 CSS mask 渲染 SVG logo，颜色跟随文字（灰 → hover 金），与 Font Awesome 图标一致
                     <span
                       className="block h-5 w-5 transition-colors duration-200"
                       style={{
