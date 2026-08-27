@@ -117,12 +117,12 @@ afdian_url = "https://afdian.com/a/ylove"
 show = true
 
 [[footer.items]]
-label = "IMAGESCDN - "
+label = "CDN - "
 text = "七牛云"
 url = "https://www.qiniu.com/"
 
 [[footer.items]]
-label = "WEBCDN - "
+label = "HOST - "
 text = "ESA"
 url = "https://www.aliyun.com/product/esa"
 
