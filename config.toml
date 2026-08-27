@@ -111,7 +111,7 @@ afdian_url = "https://afdian.com/a/ylove"
 # 每项：label=前缀文字（可空） text=链接文字 url=地址；可加 show=false 单独隐藏
 # 备案号独立配置 [footer.icp]，可用环境变量 FOOTER_ICP_SHOW 单独控制
 [footer]
-show = false
+show = true
 
 [[footer.items]]
 label = "CDN - "

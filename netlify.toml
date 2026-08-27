@@ -11,7 +11,7 @@
   DEPLOY_TARGET = "netlify"
   # 页脚/内容开关（可留空使用默认值）
   # FOOTER_SHOW = "true"
-  FOOTER_ICP_SHOW = "true"
+  # FOOTER_ICP_SHOW = "false"
   PAGE_MODE = "single"
   BILIBILI_UID = "24421599"
   # STRAPI_URL = ""
