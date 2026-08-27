@@ -46,7 +46,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useLivePulse } from "@/hooks/useLivePulse";
 import { getRingStyle } from "@/utils/live-ring";
-import { profile } from "@/data/profile";
 
 interface Social {
   name: string;
@@ -231,13 +230,6 @@ export default function Hero({
             backgroundSize: "60px 60px",
           }}
         />
-      </div>
-
-      {/* EndField 斜线纹理背景 — 从右向左平行移动，仅显示底部一半 */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none endfield-scroll-bg">
-        <div className="endfield-scroll-row">
-          {profile.background_text} &nbsp; {profile.background_text} &nbsp; {profile.background_text} &nbsp; {profile.background_text} &nbsp; {profile.background_text} &nbsp; {profile.background_text} &nbsp; {profile.background_text} &nbsp; {profile.background_text}
-        </div>
       </div>
 
       <div className="relative z-10 text-center max-w-3xl mx-auto">

@@ -1,10 +1,10 @@
 # YLOVEXLN 个人主页
 
-基于 **Astro 7** 的现代化个人主页，使用 **React 19** 构建交互组件、**TailwindCSS 4** 实现样式，支持双主题切换、B站头像与直播状态展示、Markdown / Strapi 双数据源。
+基于 **Astro 7** 的现代化个人主页，使用 **React 19** 构建交互组件、**TailwindCSS 4** 实现样式，支持 B站头像与直播状态展示、Markdown / Strapi 双数据源。
 
 ## ✨ 功能特性
 
-- 🎨 **双主题系统** — MiniMal（纯黑极简）/ EndField（工业科技感），自动记忆选择
+- 🎨 **极简黑金主题** — 纯黑极简风格，金色强调
 - ⌨️ **Hero 打字机标题** — 多标题轮播，速度可调
 - 🐾 **B站集成** — 头像自动获取、直播状态实时检测（`/api/bili-api`）
 - 🔗 **社交链接** — 支持 Font Awesome 图标 / 自定义 SVG Logo，可一键关闭图标

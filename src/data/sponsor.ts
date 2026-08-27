@@ -16,11 +16,30 @@ interface RawSponsor {
   afdian_url?: string;
 }
 
+interface RawSocial {
+  name: string;
+  url: string;
+  icon?: string;
+  logo?: string;
+  /** 是否显示该项（false 单独隐藏，默认 true） */
+  show?: boolean;
+}
+
 interface RawConfig {
   sponsor?: RawSponsor;
+  socials?: RawSocial[];
 }
 
 const config = parse(raw) as unknown as RawConfig;
+
+// 赞助总开关：SPONSOR_SHOW 环境变量 > config.toml 中 /sponsor 社交项的 show
+// 关闭时：首页赞助入口隐藏，且 /sponsor 页面无法直接访问（跳回首页）
+export function isSponsorEnabled(): boolean {
+  const envShow = import.meta.env.SPONSOR_SHOW;
+  if (envShow !== undefined) return envShow !== "false";
+  const sponsorSocial = config.socials?.find((s) => s.url === "/sponsor");
+  return sponsorSocial?.show !== false;
+}
 
 export function getSponsor() {
   const s = config.sponsor || {};

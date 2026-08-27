@@ -1,5 +1,6 @@
 import { parse } from "smol-toml";
 import raw from "../../config.toml?raw";
+import { isSponsorEnabled } from "./sponsor";
 
 interface RawSocial {
   name: string;
@@ -7,6 +8,8 @@ interface RawSocial {
   icon?: string;
   /** 自定义图标图片地址（SVG/PNG），提供时优先于 icon 使用 */
   logo?: string;
+  /** 是否显示该项（false 单独隐藏，默认 true） */
+  show?: boolean;
 }
 
 interface RawFooterItem {
@@ -58,7 +61,6 @@ interface RawConfig {
   /** 网页描述（meta description，用于 SEO） */
   site_description?: string;
   logo?: string;
-  background_text?: string;
   bilibili_uid?: number;
   avatar: string;
   titles?: string[];
@@ -140,7 +142,6 @@ export function getRawProfile() {
     site_title: config.site_title || config.name,
     site_description: config.site_description || "",
     logo: config.logo || config.name,
-    background_text: config.background_text || config.name,
     bilibili_uid: resolveBilibiliUid(),
     avatar: config.avatar || "",
     titles: config.titles || [config.title || config.name],
@@ -153,12 +154,18 @@ export function getRawProfile() {
     stats: config.stats || [],
     show_social_icons: config.show_social_icons !== false,
     footer: resolveFooter(),
-    socials: config.socials.map((s) => ({
-      name: s.name,
-      url: s.url,
-      icon: s.icon || iconMap[s.name.toLowerCase()] || s.name.toLowerCase(),
-      logo: s.logo || "",
-    })),
+    socials: config.socials
+      .filter((s) => {
+        // 赞助入口由 isSponsorEnabled 统一控制（show=false 或 SPONSOR_SHOW=false 均隐藏）
+        if (s.url === "/sponsor") return isSponsorEnabled();
+        return s.show !== false;
+      })
+      .map((s) => ({
+        name: s.name,
+        url: s.url,
+        icon: s.icon || iconMap[s.name.toLowerCase()] || s.name.toLowerCase(),
+        logo: s.logo || "",
+      })),
   };
 }
 

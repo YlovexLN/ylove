@@ -1,6 +1,5 @@
 ---
 import "@/styles/global.css";
-import LoadingCover from "@/components/react/LoadingCover";
 
 interface Props {
   title?: string;
@@ -21,18 +20,8 @@ const { title = "Ylove | Developer Portfolio", description = "Personal homepage 
     <!-- 预加载字体：避免 font-display:swap 期间先显示浏览器系统字体 -->
     <link rel="preload" as="font" type="font/ttf" href="/fonts/ChillRoundFRegular.ttf" crossorigin />
     <link rel="preload" as="font" type="font/ttf" href="/fonts/ChillRoundFBold.ttf" crossorigin />
-    <link rel="preload" as="font" type="font/ttf" href="/fonts/HarmonyOS_Sans.ttf" crossorigin />
-    <script is:inline>
-      (function() {
-        var theme = localStorage.getItem("theme");
-        if (theme !== "MiniMal" && theme !== "EndField") theme = "MiniMal";
-        document.documentElement.setAttribute("data-theme", theme);
-      })();
-    </script>
   </head>
   <body>
-    <LoadingCover client:load />
-    <div class="endfield-ambient" />
     <slot />
   </body>
 </html>

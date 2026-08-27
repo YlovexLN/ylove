@@ -4,10 +4,15 @@ import Navbar from "@/components/react/Navbar";
 import Footer from "@/components/react/Footer";
 import SponsorContent from "@/components/react/SponsorContent";
 import { profile } from "@/data/profile";
-import { sponsor } from "@/data/sponsor";
+import { sponsor, isSponsorEnabled } from "@/data/sponsor";
 
 const title = `${sponsor.title} | ${profile.site_title}`;
 const description = sponsor.subtitle;
+
+// 赞助总开关关闭时：不允许直接访问 /sponsor，跳回首页
+if (!isSponsorEnabled()) {
+  return Astro.redirect("/");
+}
 ---
 
 <Layout title={title} description={description}>

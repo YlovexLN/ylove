@@ -1,8 +1,0 @@
-/* HarmonyOS Sans SC — 官方完整版（含中英文）*/
-@font-face {
-  font-family: "HarmonyOS Sans SC Full";
-  src: url("/fonts/HarmonyOS_Sans.ttf") format("truetype");
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-}

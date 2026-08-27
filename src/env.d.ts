@@ -11,6 +11,8 @@ interface ImportMetaEnv {
   readonly FOOTER_SHOW?: string;
   /** 备案号单独控制开关（"true"/"false"，覆盖 config.toml 的 [footer.icp]） */
   readonly FOOTER_ICP_SHOW?: string;
+  /** 赞助入口显示开关（"true"/"false"，覆盖 config.toml 中 /sponsor 链接的 show） */
+  readonly SPONSOR_SHOW?: string;
 }
 
 interface ImportMeta {

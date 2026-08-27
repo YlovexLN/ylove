@@ -123,6 +123,7 @@
 | `STRAPI_URL` / `STRAPI_TOKEN` | Strapi 数据源地址与 Token |
 | `FOOTER_SHOW` | 页脚底部信息整行开关：`true` / `false` |
 | `FOOTER_ICP_SHOW` | 备案号单独开关：`false` 只隐藏备案号 |
+| `SPONSOR_SHOW` | 赞助总开关：`false` 隐藏首页赞助链接并禁用 `/sponsor` 页面（默认跟随 `config.toml` 的 `show`） |
 
 > **优先级**：环境变量 > `config.toml`。开关类变量相互独立，可只填其一。
 
