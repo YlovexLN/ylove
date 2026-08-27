@@ -79,10 +79,10 @@ name = "BiliBili"
 url = "https://space.bilibili.com/24421599"
 icon = "bilibili"
 
-[[socials]]
-name = "请我喝奶茶/赞助"
-url = "/sponsor"
-icon = "coffee"
+# [[socials]]
+# name = "请我喝奶茶/赞助"
+# url = "/sponsor"
+# icon = "coffee"
 
 
 # ── 赞助页面（/sponsor）────────────────────────────────
@@ -107,11 +107,11 @@ afdian_url = "https://afdian.com/a/ylove"
 
 
 # ── 页脚底部信息（CDN / Host / 备案等）──────────────
-# show=整行开关（默认 true）
+# show=整行开关（默认 false）
 # 每项：label=前缀文字（可空） text=链接文字 url=地址；可加 show=false 单独隐藏
 # 备案号独立配置 [footer.icp]，可用环境变量 FOOTER_ICP_SHOW 单独控制
 [footer]
-show = true
+show = false
 
 [[footer.items]]
 label = "CDN - "
