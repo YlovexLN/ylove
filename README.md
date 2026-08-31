@@ -86,17 +86,17 @@ pnpm preview     # 本地预览构建结果
 2. **部署**：
 
    ```sh
-   pnpm exec wrangler deploy -c dist/server/wrangler.json
+   pnpm deploy:cloudflare
    ```
 
-   > 也可 `cd dist/server && pnpm exec wrangler deploy`。
+   > 即 `wrangler deploy -c dist/server/wrangler.json`（脚本已内置该参数）；也可 `cd dist/server && pnpm exec wrangler deploy`。
 
 3. **Workers Builds（控制台自动构建部署）**：控制台 `Workers & Pages` → **Create → Worker → Connect to Git repository** 选择本仓库，构建配置填写：
 
    - **构建命令**：`pnpm build:cloudflare`
-   - **部署命令**：`pnpm exec wrangler deploy -c dist/server/wrangler.json`
+   - **部署命令**：`pnpm deploy:cloudflare`
 
-   > ⚠️ 部署命令**必须带** `-c dist/server/wrangler.json`：Worker 入口与静态资源目录都由这份构建产物自动生成的配置指定；不带则 wrangler 会读仓库根 `wrangler.jsonc`（无入口文件，部署失败或得到空 Worker）。该文件构建时自动合并根 `wrangler.jsonc` 的 `vars` 等配置。
+   > ⚠️ 部署命令用 `deploy:cloudflare` 脚本，内部已带 `-c dist/server/wrangler.json`（Worker 入口与静态资源目录都由这份构建产物自动生成的配置指定）；不要裸用 `wrangler deploy`——那会读仓库根 `wrangler.jsonc`（无入口文件，部署失败或得到空 Worker）。该文件构建时自动合并根 `wrangler.jsonc` 的 `vars` 等配置。
 
 4. **环境变量**：如需用环境变量覆盖配置，见下方「环境变量」章节。
 
