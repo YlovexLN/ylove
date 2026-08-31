@@ -45,6 +45,7 @@
     "@types/react-dom": "^19.2.3",
     "cross-env": "^10.1.0",
     "jsdom": "^30.0.1",
-    "playwright": "^1.62.1"
+    "playwright": "^1.62.1",
+    "wrangler": "^4.83.0"
   }
 }

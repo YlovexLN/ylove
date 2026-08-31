@@ -91,9 +91,16 @@ pnpm preview     # 本地预览构建结果
 
    > 也可 `cd dist/server && pnpm exec wrangler deploy`。
 
-3. **环境变量**：如需用环境变量覆盖配置，见下方「环境变量」章节。
+3. **Workers Builds（控制台自动构建部署）**：控制台 `Workers & Pages` → **Create → Worker → Connect to Git repository** 选择本仓库，构建配置填写：
 
-> 构建参数通过项目根 `wrangler.jsonc` 配置（名称、`compatibility_date`、`nodejs_compat` 等），构建时自动合并到 `dist/server/wrangler.json`。也可在 Cloudflare 控制台通过 **Workers Builds** 连接 Git 仓库自动构建部署（构建命令 `pnpm build:cloudflare`，部署命令 `pnpm exec wrangler deploy -c dist/server/wrangler.json`）。
+   - **构建命令**：`pnpm build:cloudflare`
+   - **部署命令**：`pnpm exec wrangler deploy -c dist/server/wrangler.json`
+
+   > ⚠️ 部署命令**必须带** `-c dist/server/wrangler.json`：Worker 入口与静态资源目录都由这份构建产物自动生成的配置指定；不带则 wrangler 会读仓库根 `wrangler.jsonc`（无入口文件，部署失败或得到空 Worker）。该文件构建时自动合并根 `wrangler.jsonc` 的 `vars` 等配置。
+
+4. **环境变量**：如需用环境变量覆盖配置，见下方「环境变量」章节。
+
+> `wrangler` 已加入 `devDependencies`（`@astrojs/cloudflare` 的 peer 依赖，pnpm 不会自动安装，否则 `pnpm exec wrangler` 会报 `Command "wrangler" not found`）。构建参数通过项目根 `wrangler.jsonc` 配置（名称、`compatibility_date`、`nodejs_compat` 等），构建时自动合并到 `dist/server/wrangler.json`。
 
 ### 部署到 Netlify
 
