@@ -159,13 +159,16 @@ EdgeOne Makers 支持连接 GitHub / GitLab / Bitbucket / Gitee 仓库，推送�
 | `STRAPI_URL` / `STRAPI_TOKEN` | Strapi 数据源地址与 Token（`content_source = "strapi"` 时使用） |
 | `FOOTER_SHOW` | 页脚底部信息整行开关：`true` / `false` |
 | `FOOTER_ICP_SHOW` | 备案号单独开关：`false` 只隐藏备案号（默认 `false`，需配置了 `[footer.icp]`） |
+| `FOOTER_ITEMS` | 页脚项内容覆盖：JSON 对象（`{"CDN - ": {"text": "...", "url": "..."}}`，键为 label）或数组形式，构建时替换 `[[footer.items]]`；未设置或格式无效则用 config.toml |
 
-> 页脚底部信息的内容（CDN / Host 等 `[[footer.items]]`、备案号 `[footer.icp]`）在 `config.toml` 中配置；环境变量仅用于控制显示开关。优先级：环境变量 > `config.toml`。`FOOTER_SHOW` 与 `FOOTER_ICP_SHOW` 相互独立，可只填其一。备案号用 `FOOTER_ICP_SHOW` 单独控制，不影响 CDN / Host。
+> 页脚底部信息的内容（CDN / Host 等 `[[footer.items]]`、备案号 `[footer.icp]`）默认在 `config.toml` 中配置，`FOOTER_ITEMS` 环境变量可整体覆盖页脚项内容，其余环境变量控制显示开关。优先级：环境变量 > `config.toml`。`FOOTER_SHOW` 与 `FOOTER_ICP_SHOW` 相互独立，可只填其一。备案号用 `FOOTER_ICP_SHOW` 单独控制，不影响 CDN / Host。
 
 **Cloudflare Workers** 设置方式：
 
-- **Workers Builds（Git 连接）**：控制台 `Workers & Pages` → 项目 → `Settings` → `Variables and Secrets`
-- **本地 wrangler**：构建时注入开关变量（如 PowerShell：`$env:FOOTER_SHOW='false'`），或写入 `wrangler.jsonc` 的 `vars`；敏感值用 `pnpm exec wrangler secret put STRAPI_TOKEN`
+- **Workers Builds（Git 连接）**：变量写在根目录 `wrangler.jsonc` 的 `vars`（或控制台 `Workers & Pages` → 项目 → `Settings` → `Variables and Secrets`），平台构建时会注入构建环境
+- **本地 wrangler**：变量需在构建命令前注入 shell（如 PowerShell：`$env:FOOTER_SHOW='false'`）或写入根目录 `.env`（本地 `astro build` 不会读取 `wrangler.jsonc` 的 `vars`）；`DEPLOY_TARGET` 由构建脚本自动设置
+
+> ⚠️ 本项目通过 `import.meta.env.*` 在**构建时**读取这些变量（构建产物已静态注入，值须为字符串），修改后需重新构建部署。敏感值（如 `STRAPI_TOKEN`）请用控制台 `Variables and Secrets` 配置，勿写入仓库内的 `wrangler.jsonc`。
 
 **Netlify** 设置方式：项目 `Site configuration → Environment variables` 中添加变量与值，重新 Deploy 生效。
 

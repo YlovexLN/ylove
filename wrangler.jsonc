@@ -2,5 +2,26 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ylove",
   "compatibility_date": "2026-08-06",
-  "compatibility_flags": ["nodejs_compat"]
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    // 构建环境变量（覆盖 config.toml，等价于 netlify.toml 的 [build.environment]）。
+    // 本项目在构建时通过 import.meta.env 读取（值为字符串），Workers Builds（Git 连接）构建时由平台注入；
+    // 注意：本地执行 pnpm build:cloudflare 时不读取本文件，需在 shell 或 .env 中注入。
+    // 敏感值（如 STRAPI_TOKEN）请用控制台 Secrets 配置，勿写入仓库。
+    // "SPONSOR_SHOW": "false",
+    "PAGE_MODE": "single",
+    "BILIBILI_UID": "24421599",
+    // 页脚项覆盖（JSON 对象：键为 label，值为 {text, url}，构建时替换 config.toml 的 [[footer.items]]）
+    "FOOTER_ITEMS": {
+      "CDN - ": {
+        "text": "Cloudflare",
+        "url": "https://www.cloudflare.com"
+      },
+      "HOST - ": {
+        "text": "Cloudflare Workers",
+        "url": "https://workers.cloudflare.com"
+      }
+    }
+    // "FOOTER_SHOW": "true",
+  }
 }

@@ -92,6 +92,34 @@ const iconMap: Record<string, string> = {
 function filterVisibleItems(items: RawFooterItem[]): RawFooterItem[] {
   return items.filter((item) => item.show !== false);
 }
+
+// 解析 FOOTER_ITEMS 环境变量为页脚项，支持对象或数组形式的 JSON；格式不可用时返回 undefined（沿用 config.toml）：
+//   {"CDN - ": {"text": "...", "url": "...", "show": false}} 或 [{"label":"...","text":"...","url":"..."}]
+function parseFooterItems(raw: string | undefined): RawFooterItem[] | undefined {
+  if (!raw?.trim()) return undefined; // 未设置或为空，沿用 config.toml
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    return undefined; // 非 JSON，沿用 config.toml
+  }
+  if (value === null || typeof value !== "object") return undefined;
+  const list = Array.isArray(value)
+    ? value
+    : Object.entries(value).map(([label, v]) => ({ label, ...((v ?? {}) as object) }));
+  const items = list
+    .map((it): RawFooterItem => {
+      const o = (it ?? {}) as Record<string, unknown>;
+      return {
+        label: typeof o.label === "string" ? o.label : undefined,
+        text: typeof o.text === "string" ? o.text : "",
+        url: typeof o.url === "string" ? o.url : "",
+        show: typeof o.show === "boolean" ? o.show : undefined,
+      };
+    })
+    .filter((it) => it.text || it.url);
+  return items.length > 0 ? items : undefined;
+}
 // 页面模式：config.toml 为基础，PAGE_MODE 环境变量可覆盖（便于部署后免改代码切换）
 //   PAGE_MODE = "single" | "scroll"
 function resolveMode(): string {
@@ -132,6 +160,10 @@ function resolveFooter(): RawFooter {
   if (envIcpShow !== undefined && footer.icp) {
     footer.icp.show = envIcpShow !== "false";
   }
+
+  // 页脚项内容覆盖：FOOTER_ITEMS 环境变量可替换 config.toml 的 [[footer.items]]（格式见 parseFooterItems）
+  const parsedItems = parseFooterItems(import.meta.env.FOOTER_ITEMS);
+  if (parsedItems) footer.items = filterVisibleItems(parsedItems);
 
   return footer;
 }
