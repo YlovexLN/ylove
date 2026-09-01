@@ -72,8 +72,9 @@ export const GET: APIRoute = async ({ request }) => {
       const imgRes = await fetch(faceUrl, {
         headers: { ...BILI_HEADERS, Referer: "https://space.bilibili.com/" },
       });
-      const buffer = Buffer.from(await imgRes.arrayBuffer());
-      return new Response(buffer, {
+      // 直接返回 ArrayBuffer（Cloudflare Workers 无 Buffer 全局对象，Node/Worker 均支持）
+      const body = await imgRes.arrayBuffer();
+      return new Response(body, {
         status: 200,
         headers: {
           "Content-Type": imgRes.headers.get("content-type") || "image/jpeg",
