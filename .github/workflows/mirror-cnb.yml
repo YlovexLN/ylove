@@ -1,0 +1,40 @@
+# 推送 main 分支后自动镜像同步到 cnb.cool（腾讯 CNB 镜像仓库）
+# 依赖仓库 Secret：CNB_GIT_TOKEN（cnb.cool 访问令牌，需 repo-code:rw 权限；用户名固定为 cnb）
+name: Mirror to CNB
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # 手动触发补同步
+
+permissions:
+  contents: read
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: cnb-sync # 串行化，避免并发推送冲突
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 拉取全部分支历史
+          fetch-tags: true # 同时拉取标签
+
+      - name: Push mirror to cnb.cool
+        env:
+          CNB_GIT_TOKEN: ${{ secrets.CNB_GIT_TOKEN }}
+        run: |
+          git remote add cnb https://cnb.cool/ylove520/ylove.git
+          # 用 HTTP Header 携带令牌，避免令牌出现在 URL / 错误日志中
+          git config --local credential.helper ""
+          git config --local "http.https://cnb.cool/.extraheader" \
+            "Authorization: Basic $(printf 'cnb:%s' "$CNB_GIT_TOKEN" | base64)"
+          # 镜像所有分支 + 标签（--prune 清理远端已删除的引用），网络失败重试 3 次
+          for i in 1 2 3; do
+            git push --prune cnb "refs/remotes/origin/*:refs/heads/*" "refs/tags/*:refs/tags/*" && exit 0
+            echo "推送失败（第 $i 次），5 秒后重试..."
+            sleep 5
+          done
+          exit 1
