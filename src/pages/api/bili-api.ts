@@ -15,12 +15,44 @@ const LIVE_TTL = 5 * 60 * 1000;
 let cachedFace = "";
 let cachedUid = "";
 let cachedLive: { live: boolean; roomId: string; time: number } | null = null;
+let buvidCookie = "";
+
+// 获取 B站 buvid3 cookie，用于规避风控（-352/-412）；失败不影响主流程
+async function getBuvidCookie(): Promise<string> {
+  if (buvidCookie) return buvidCookie;
+  try {
+    const home = await fetch("https://www.bilibili.com/", {
+      headers: {
+        "User-Agent": BILI_HEADERS["User-Agent"],
+        "Accept-Language": "zh-CN,zh;q=0.9",
+      },
+    });
+    // getSetCookie 在最新运行时支持，旧环境回退到 get("set-cookie")
+    const getSetCookie = (home.headers as any).getSetCookie;
+    const jar: string[] =
+      typeof getSetCookie === "function"
+        ? getSetCookie.call(home.headers)
+        : home.headers.get("set-cookie")
+          ? [home.headers.get("set-cookie")!]
+          : [];
+    const buvid = jar.find((c) => c.startsWith("buvid3"))?.split(";")[0];
+    if (buvid) buvidCookie = buvid;
+  } catch {
+    // ignore
+  }
+  return buvidCookie;
+}
 
 async function getFaceUrl(uid: string): Promise<string> {
   if (cachedUid === uid && cachedFace) return cachedFace;
   try {
+    const cookie = await getBuvidCookie();
     const res = await fetch(`https://api.bilibili.com/x/web-interface/card?mid=${uid}`, {
-      headers: { ...BILI_HEADERS, Referer: "https://space.bilibili.com/" },
+      headers: {
+        ...BILI_HEADERS,
+        Referer: "https://space.bilibili.com/",
+        ...(cookie ? { Cookie: cookie } : {}),
+      },
     });
     const json: any = await res.json();
     const face = json.code === 0 ? json.data?.card?.face || "" : "";

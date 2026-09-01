@@ -18,7 +18,8 @@ site_description = "YLOVEXLN 的个人主页与作品集"
 bilibili_uid = 680447
 
 # 默认头像（B站获取失败或未填 UID 时使用）
-avatar = ""
+# 已内置静态头像 public/avatars/avatar.jpg，部署到 Cloudflare Workers 等被 B站风控的环境时回退使用
+avatar = "/avatars/avatar.jpg"
 
 # 标题列表（用于 Hero 区域的轮播标题，可设置多个）
 titles = [

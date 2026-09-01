@@ -139,7 +139,14 @@ export default function Hero({
   const [liveRoom, setLiveRoom] = useState("");
   const [showScrollHint, setShowScrollHint] = useState(true);
   const pulseProgress = useLivePulse(isLive);
-  const [avatarSrc] = useState(avatar || (bilibiliUid ? `/api/bili-api?action=avatar&uid=${bilibiliUid}` : ""));
+  const staticAvatar = avatar;
+  const [avatarSrc, setAvatarSrc] = useState(
+    bilibiliUid ? `/api/bili-api?action=avatar&uid=${bilibiliUid}` : staticAvatar || ""
+  );
+  // B站头像代理失败（如部署到 Cloudflare Workers 被风控）时回退到内置静态头像，避免空白/裂图
+  const handleAvatarError = () => {
+    if (staticAvatar && avatarSrc !== staticAvatar) setAvatarSrc(staticAvatar);
+  };
   const typeRef = useRef({ i: 0, deleting: false });
 
   // 打字机效果
@@ -261,6 +268,7 @@ export default function Hero({
                     src={avatarSrc}
                     alt={name}
                     className="w-full h-full object-cover"
+                    onError={handleAvatarError}
                   />
                 </div>
                 )}
