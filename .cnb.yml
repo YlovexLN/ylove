@@ -1,0 +1,37 @@
+# CNB → GitHub 镜像同步
+# main 分支有推送（直接 push 或 PR 合并）时，自动同步到 GitHub 仓库 YlovexLN/ylove
+# 依赖 CNB 构建环境变量：GH_TOKEN（GitHub Personal Access Token，需 repo 权限）
+main:
+  push:
+    - name: sync-to-github
+      lock:
+        key: github-sync
+        wait: true               # 排队等待
+        cancel-in-wait: true     # 取消排队中的，只保留最新一次
+      stages:
+        - name: push-to-github
+          script: |
+            set -e
+            echo "==> CNB→GitHub 同步: $CNB_COMMIT_SHORT → YlovexLN/ylove"
+            [ -n "$GH_TOKEN" ] || { echo "错误: GH_TOKEN 未配置"; exit 1; }
+
+            # 添加 GitHub remote（令牌经 HTTP Header 传输，避免泄露在 URL/日志中）
+            git remote add github "https://github.com/YlovexLN/ylove.git" 2>/dev/null \
+              || git remote set-url github "https://github.com/YlovexLN/ylove.git"
+            git config --local credential.helper ""
+            git config --local "http.https://github.com/.extraheader" \
+              "Authorization: Basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64)"
+
+            # 补齐完整历史（若 CNB 拉取的是浅仓库）
+            if [ "$(git rev-parse --is-shallow-repository 2>/dev/null)" = "true" ]; then
+              git fetch --unshallow origin || true
+            fi
+            git fetch origin --tags --force || true
+
+            # 推送 main + 标签到 GitHub，网络失败重试 3 次
+            for i in 1 2 3; do
+              git push github "HEAD:refs/heads/main" "refs/tags/*:refs/tags/*" && exit 0
+              echo "推送失败（第 $i 次），5 秒后重试..."
+              sleep 5
+            done
+            exit 1
