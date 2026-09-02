@@ -12,10 +12,9 @@ const BILI_HEADERS = {
 // 直播检测缓存时长：5 分钟/次（README 承诺的限频，避免频繁调用触发 B站风控）
 const LIVE_TTL = 5 * 60 * 1000;
 
-// 头像代理拿不到真实头像（数据中心出口 IP 被 B站 -412/-352 风控）时的内置兜底头像。
-// public/avatars/avatar.jpg 作为站点静态资源由平台托管，返回 302 重定向，客户端/img 会自动跟随成 200。
-// 与前端 Hero 的 onError 兜底（config.toml avatar = "/avatars/avatar.jpg"）共用同一份资源。
-const FALLBACK_AVATAR = "/avatars/avatar.jpg";
+// 头像代理拿不到真实头像（数据中心出口 IP 被 B站 -412/-352 风控）时，不再由本接口 302 到本地图片，
+// 而是返回失败状态码，交由前端 Hero 的 <img> onError 回退到 config.toml 中填写的 avatar 兜底图。
+// 这样用户可在配置文件里自由指定兜底头像（不必受本接口写死的本地路径限制），跨 SSR/ESA 部署行为一致。
 
 // 出口网络可用但 B站接口抖动时做一次重试，提升成功率（数据中心 IP 偶发风控）
 const MAX_ATTEMPTS = 2;
@@ -201,13 +200,11 @@ export const GET: APIRoute = async ({ request }) => {
     } catch {
       // 抓真实头像整体失败，落到下方静态兜底，保证接口稳定返回而非 500
     }
-    // 拿不到真实头像 / 抓图失败 → 重定向到内置静态头像（客户端自动跟随成 200，页面不裂图）
-    return new Response(null, {
-      status: 302,
-      headers: {
-        Location: FALLBACK_AVATAR,
-        "Cache-Control": "no-store",
-      },
+    // 拿不到真实头像 / 抓图失败 → 返回失败状态（不返回图片），触发 <img> onError，
+    // 前端据此回退到 config.toml avatar 配置的兜底头像，保证页面不裂图空白。
+    return new Response("avatar unavailable", {
+      status: 404,
+      headers: { "Content-Type": "text/plain", "Cache-Control": "no-store" },
     });
   }
 
