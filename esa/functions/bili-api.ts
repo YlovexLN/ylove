@@ -9,23 +9,55 @@
  * 路由：静态资源优先 → 未命中再执行本函数（参见 ESA 文档「静态资源的路由」）
  *
  * 注意：ER 运行时为 Web Worker API 风格（fetch / Request / Response），
- * 无 Node.js 的 Buffer / process，因此头像响应改用 Response 直接接收 body 流，
- * 其余逻辑与 src/pages/api/bili-api.ts 保持一致。
+ * 无 Node.js 的 Buffer / process，因此头像响应改用 Response 直接接收 body 流。
+ * 与 SSR 版 src/pages/api/bili-api.ts 逻辑保持一致，含 buvid3 cookie 握手以规避风控。
  */
-const BILI_HEADERS = {
-  "User-Agent": "Mozilla/5.0",
-  Referer: "https://space.bilibili.com/",
-};
+const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
 
 let cachedFace = "";
 let cachedUid = "";
+let buvidCookie = "";
+
+// 获取 B站匿名访客标识 buvid3 cookie（服务端主动请求首页，由 B站 set-cookie 下发）
+async function getBuvidCookie(): Promise<string> {
+  if (buvidCookie) return buvidCookie;
+  try {
+    const home = await fetch("https://www.bilibili.com/", {
+      headers: { "User-Agent": UA, "Accept-Language": "zh-CN,zh;q=0.9" },
+    });
+    // getSetCookie 在最新运行时支持，旧环境回退到 get("set-cookie")
+    const getSetCookie = (home.headers as any).getSetCookie;
+    const jar: string[] =
+      typeof getSetCookie === "function"
+        ? getSetCookie.call(home.headers)
+        : home.headers.get("set-cookie")
+          ? [home.headers.get("set-cookie")!]
+          : [];
+    const buvid = jar.find((c) => c.startsWith("buvid3"))?.split(";")[0];
+    if (buvid) buvidCookie = buvid;
+  } catch {
+    // ignore —— 失败不影响主流程
+  }
+  return buvidCookie;
+}
+
+async function buildHeaders(referer: string): Promise<Record<string, string>> {
+  const cookie = await getBuvidCookie();
+  return {
+    "User-Agent": UA,
+    Referer: referer,
+    "Accept-Language": "zh-CN,zh;q=0.9",
+    ...(cookie ? { Cookie: cookie } : {}),
+  };
+}
 
 async function getFaceUrl(uid: string): Promise<string> {
   if (cachedUid === uid && cachedFace) return cachedFace;
   try {
+    const headers = await buildHeaders("https://space.bilibili.com/");
     const res = await fetch(
       `https://api.bilibili.com/x/web-interface/card?mid=${uid}`,
-      { headers: BILI_HEADERS }
+      { headers }
     );
     const json: any = await res.json();
     const face = json.code === 0 ? json.data?.card?.face || "" : "";
@@ -63,7 +95,8 @@ export default {
       const faceUrl = await getFaceUrl(uid);
       if (!faceUrl) return new Response("", { status: 500 });
       try {
-        const imgRes = await fetch(faceUrl, { headers: BILI_HEADERS });
+        const headers = await buildHeaders("https://space.bilibili.com/");
+        const imgRes = await fetch(faceUrl, { headers });
         return new Response(imgRes.body, {
           status: 200,
           headers: {
@@ -81,9 +114,10 @@ export default {
       let live = false;
       let resolvedRoomId = "";
 
+      const headers = await buildHeaders("https://live.bilibili.com/");
       const roomRes = await fetch(
         `https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid=${uid}`,
-        { headers: { "User-Agent": "Mozilla/5.0", Referer: "https://live.bilibili.com/" } }
+        { headers }
       );
       const roomJson: any = await roomRes.json();
       if (roomJson.code === 0 && roomJson.data) {
