@@ -1,0 +1,14 @@
+# 例外反向：CNB 个别开发后，手动把 CNB main 推回 GitHub（主仓库）
+# 仅在需要时手动点击，平时 CNB 是 GitHub 的只读镜像，不会自动反向，避免同步死循环
+branch:
+  - reg: ^main$
+    buttons:
+      - name: 同步到 GitHub
+        description: 将 CNB main（含个别在 CNB 的开发改动）快进推送到 GitHub 主仓库 main + tags
+        event: web_trigger_sync_to_github
+        inputs:
+          note:
+            name: 备注（可选）
+            type: textarea
+            required: false
+            placeholder: 本次在 CNB 的开发说明（可选）

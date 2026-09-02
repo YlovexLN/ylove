@@ -1,11 +1,13 @@
-# 推送 main 分支后自动镜像同步到 cnb.cool（腾讯 CNB 镜像仓库）
+# 主镜像：GitHub（主仓库）main 有更新时，单向同步到 CNB（镜像）
+# 方向：GitHub → CNB（自动）；CNB → GitHub 的反向仅在 CNB 个别开发时手动触发（见 .cnb/web_trigger.yml）
 # 依赖仓库 Secret：CNB_GIT_TOKEN（cnb.cool 访问令牌，需 repo-code:rw 权限；用户名固定为 cnb）
 name: Mirror to CNB
 
 on:
   push:
     branches: [main]
-  workflow_dispatch: # 手动触发补同步
+    tags: ["*"]        # 同步 tag
+  workflow_dispatch:   # 手动触发补同步
 
 permissions:
   contents: read
@@ -14,15 +16,15 @@ jobs:
   mirror:
     runs-on: ubuntu-latest
     concurrency:
-      group: cnb-sync # 串行化，避免并发推送冲突
+      group: cnb-sync      # 串行化，避免并发推送冲突
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v5
         with:
-          fetch-depth: 0 # 拉取全部分支历史
-          fetch-tags: true # 同时拉取标签
+          fetch-depth: 0
+          fetch-tags: true
 
-      - name: Push mirror to cnb.cool
+      - name: Push main to cnb.cool
         env:
           CNB_GIT_TOKEN: ${{ secrets.CNB_GIT_TOKEN }}
         run: |
@@ -31,9 +33,12 @@ jobs:
           git config --local credential.helper ""
           git config --local "http.https://cnb.cool/.extraheader" \
             "Authorization: Basic $(printf 'cnb:%s' "$CNB_GIT_TOKEN" | base64)"
-          # 镜像所有分支 + 标签（--prune 清理远端已删除的引用），网络失败重试 3 次
+
+          # 只镜像 main + tags，不做 --prune：
+          #  1. 避免误删 CNB 上因“个别情况在 CNB 开发”而存在的本地分支（如 auto/*，带活跃 PR 分支不允许删除导致整次 push 失败）
+          #  2. CNB main 保持为 GitHub main 的忠实镜像，CNB 本地开发分支保留原样
           for i in 1 2 3; do
-            git push --prune cnb "refs/remotes/origin/*:refs/heads/*" "refs/tags/*:refs/tags/*" && exit 0
+            git push cnb "HEAD:refs/heads/main" "refs/tags/*:refs/tags/*" && exit 0
             echo "推送失败（第 $i 次），5 秒后重试..."
             sleep 5
           done
