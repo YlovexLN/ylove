@@ -62,10 +62,10 @@ async function buildHeaders(referer: string): Promise<Record<string, string>> {
   };
 }
 
-// 请求 B站 card 接口拿头像 URL；数据中心 IP 被风控（-412 / -352 / 非 JSON）时返回空字符串。
-// 增加一次重试，规避偶发风控；内部异常不抛出，交由上层走兜底头像。
-async function getFaceUrl(uid: string): Promise<string> {
-  if (cachedUid === uid && cachedFace) return cachedFace;
+// 从 B站用户空间 card 接口拿头像 URL（主来源）。
+// 数据中心 IP 被风控（-412 / -352 / 非 JSON）时可能拿不到，交由上层走 live 接口兜底。
+// 增加一次重试规避偶发风控；内部异常不抛出。
+async function getFaceFromCard(uid: string): Promise<string> {
   for (let i = 0; i < MAX_ATTEMPTS; i++) {
     try {
       const headers = await buildHeaders("https://space.bilibili.com/");
@@ -84,16 +84,56 @@ async function getFaceUrl(uid: string): Promise<string> {
         json?.code === 0 && json.data?.card?.face
           ? json.data.card.face
           : "";
-      if (face) {
-        cachedFace = face;
-        cachedUid = uid;
-        return face;
-      }
+      if (face) return face;
     } catch {
       // 网络异常，下一轮重试
     }
   }
   return "";
+}
+
+// 从 B站直播 Master/info 接口拿头像 URL（兜底来源）。
+// 该接口相对开放、匿名（无需 buvid3 cookie）即可访问，数据中心 IP 也不易触发 -412，
+// 可作为 card 接口被风控时的可靠兜底。返回 data.info.face。
+async function getFaceFromLive(uid: string): Promise<string> {
+  for (let i = 0; i < MAX_ATTEMPTS; i++) {
+    try {
+      const headers = await buildHeaders("https://live.bilibili.com/");
+      const res = await fetch(
+        `https://api.live.bilibili.com/live_user/v1/Master/info?uid=${uid}`,
+        { headers }
+      );
+      const text = await res.text();
+      let json: any = null;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        // 响应非 JSON，视为失败，走重试
+        continue;
+      }
+      const face =
+        json?.code === 0 && json.data?.info?.face
+          ? json.data.info.face
+          : "";
+      if (face) return face;
+    } catch {
+      // 网络异常，下一轮重试
+    }
+  }
+  return "";
+}
+
+// 依次尝试 card → live 两个来源取头像 URL，命中即缓存返回。
+// 两个来源都无法获取（B站接口风控 / 网络异常 / UID 无数据）时返回空字符串，
+// 由 avatar handler 降级为本地静态头像兜底，保证接口绝不 500 / 裂图。
+async function getFaceUrl(uid: string): Promise<string> {
+  if (cachedUid === uid && cachedFace) return cachedFace;
+  const face = (await getFaceFromCard(uid)) || (await getFaceFromLive(uid));
+  if (face) {
+    cachedFace = face;
+    cachedUid = uid;
+  }
+  return face;
 }
 
 async function getLiveStatus(uid: string) {
