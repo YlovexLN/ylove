@@ -17,10 +17,10 @@ site_description = "YLOVEXLN 的个人主页与作品集"
 # 可用环境变量 BILIBILI_UID 覆盖
 bilibili_uid = 680447
 
-# 默认/兜底头像：未填 UID、或浏览器端从 B站获取失败（断网/被风控）时使用，也作加载中的占位图
+# 默认/兜底头像：未填 UID、或服务端从 B站获取失败（断网/被风控）时使用，也作加载中的占位图
 # 已内置静态头像 public/avatars/avatar.jpg
-# 注：头像优先在用户浏览器用 JSONP 直连 B站获取（见 src/utils/bili-client.ts），
-#     故部署到 Cloudflare Workers 等被 B站屏蔽出口 IP 的环境也能拿到真实头像，无需此兜底
+# 注：头像经本站 /api/bili-api 服务端代理获取，携带 buvid3 cookie 规避风控；
+#     获取失败时 <img> onError 自动回退到此静态头像，不裂图空白
 avatar = "/avatars/avatar.jpg"
 
 # 标题列表（用于 Hero 区域的轮播标题，可设置多个）

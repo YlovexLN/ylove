@@ -6,7 +6,7 @@
 
 - 🎨 **极简主题** — 纯黑极简风格，翡翠绿强调
 - ⌨️ **Hero 打字机标题** — 多标题轮播，速度可调
-- 🐾 **B站集成** — 头像自动获取、直播状态实时检测；**在用户浏览器**用 JSONP 直连 B站，避免部署到 Cloudflare Workers 等服务端时服务器 IP 被 B站风控屏蔽
+- 🐾 **B站集成** — 头像自动获取、直播状态实时检测；服务端代理携带 buvid3 cookie 规避数据中心 IP 风控，静态头像兜底不裂图
 - 🔗 **社交链接** — 支持 Font Awesome 图标 / 自定义 SVG Logo，可一键关闭图标
 - 📄 **双数据源** — `markdown`（本地预写内容）或 `strapi`（构建时拉取 CMS）
 - 📦 **模块化页面** — Works / Posts / Profile / Repository / Contact 按需开关
@@ -68,7 +68,7 @@ pnpm preview     # 本地预览构建结果
 
 ## ☁️ 部署
 
-本项目为 SSR 模式（含 `/api/bili-api` 运行时接口），可直接部署到 **Cloudflare Workers**、**Netlify** 或 **腾讯云 EdgeOne**。B站头像与直播检测默认在**用户浏览器端**用 JSONP 直连 B站完成（见 `src/utils/bili-client.ts`），因此即便部署在 B站会风控其出口 IP 的 Cloudflare Workers 上也能正常展示；`/api/bili-api` 保留作服务端兜底/兼容。
+本项目为 SSR 模式（含 `/api/bili-api` 运行时接口），可直接部署到 **Cloudflare Workers**、**Netlify** 或 **腾讯云 EdgeOne**。B站头像与直播检测通过**本站服务端 `/api/bili-api` 代理**完成——服务端先向 B站发起一次握手获取匿名 `buvid3` cookie（B站下发给任意匿名访客的风控标识），再携带该 cookie + 完整浏览器 UA + 匹配 Referer 请求 B站接口，有效规避数据中心出口 IP 被风控（-352/-412）。头像失败自动回退到内置静态头像，不会裂图空白。
 
 > 💡 无需修改 `astro.config.mjs`：构建时通过环境变量 `DEPLOY_TARGET`（`cloudflare` / `netlify` / `node`，`edgeone` 待官方适配 Astro 7）自动选择适配器，对应脚本见下方。
 

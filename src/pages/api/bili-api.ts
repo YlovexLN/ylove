@@ -15,12 +15,51 @@ const LIVE_TTL = 5 * 60 * 1000;
 let cachedFace = "";
 let cachedUid = "";
 let cachedLive: { live: boolean; roomId: string; time: number } | null = null;
+let buvidCookie = "";
+
+// 获取 B站匿名访客标识 buvid3 cookie（服务端主动请求首页，由 B站 set-cookie 下发）
+// 数据中心出口 IP（如 Cloudflare Worker）无此标识时调 API 易触发 -352/-412；成功获取后内存缓存复用
+async function getBuvidCookie(): Promise<string> {
+  if (buvidCookie) return buvidCookie;
+  try {
+    const home = await fetch("https://www.bilibili.com/", {
+      headers: {
+        "User-Agent": BILI_HEADERS["User-Agent"],
+        "Accept-Language": "zh-CN,zh;q=0.9",
+      },
+    });
+    // getSetCookie 在最新运行时支持，旧环境回退到 get("set-cookie")
+    const getSetCookie = (home.headers as any).getSetCookie;
+    const jar: string[] =
+      typeof getSetCookie === "function"
+        ? getSetCookie.call(home.headers)
+        : home.headers.get("set-cookie")
+          ? [home.headers.get("set-cookie")!]
+          : [];
+    const buvid = jar.find((c) => c.startsWith("buvid3"))?.split(";")[0];
+    if (buvid) buvidCookie = buvid;
+  } catch {
+    // ignore —— 失败不影响主流程，仅少了 cookie 可能被风控
+  }
+  return buvidCookie;
+}
+
+/** 构造带 buvid3 cookie（如有）的请求头 */
+async function buildHeaders(referer: string): Promise<Record<string, string>> {
+  const cookie = await getBuvidCookie();
+  return {
+    ...BILI_HEADERS,
+    Referer: referer,
+    ...(cookie ? { Cookie: cookie } : {}),
+  };
+}
 
 async function getFaceUrl(uid: string): Promise<string> {
   if (cachedUid === uid && cachedFace) return cachedFace;
   try {
+    const headers = await buildHeaders("https://space.bilibili.com/");
     const res = await fetch(`https://api.bilibili.com/x/web-interface/card?mid=${uid}`, {
-      headers: { ...BILI_HEADERS, Referer: "https://space.bilibili.com/" },
+      headers,
     });
     const json: any = await res.json();
     const face = json.code === 0 ? json.data?.card?.face || "" : "";
@@ -38,8 +77,9 @@ async function getLiveStatus(uid: string) {
   // 5 分钟内复用上次结果，减少 B站 API 调用（Worker 内存缓存，重部署后失效属正常）
   if (cachedLive && Date.now() - cachedLive.time < LIVE_TTL) return cachedLive;
   try {
+    const headers = await buildHeaders("https://live.bilibili.com/");
     const roomRes = await fetch(`https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid=${uid}`, {
-      headers: { ...BILI_HEADERS, Referer: "https://live.bilibili.com/" },
+      headers,
     });
     const roomJson: any = await roomRes.json();
     const data = roomJson.data || {};
@@ -69,9 +109,8 @@ export const GET: APIRoute = async ({ request }) => {
     const faceUrl = await getFaceUrl(uid);
     if (!faceUrl) return new Response("", { status: 500 });
     try {
-      const imgRes = await fetch(faceUrl, {
-        headers: { ...BILI_HEADERS, Referer: "https://space.bilibili.com/" },
-      });
+      const headers = await buildHeaders("https://space.bilibili.com/");
+      const imgRes = await fetch(faceUrl, { headers });
       // 直接返回 ArrayBuffer（Cloudflare Workers 无 Buffer 全局对象，Node/Worker 均支持）
       const body = await imgRes.arrayBuffer();
       return new Response(body, {
