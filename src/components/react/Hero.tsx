@@ -140,10 +140,15 @@ export default function Hero({
   const [showScrollHint, setShowScrollHint] = useState(true);
   const pulseProgress = useLivePulse(isLive);
   const staticAvatar = avatar;
+  // 头像走本站服务端代理 /api/bili-api（Referer/UA 可控，服务端已实测稳定返回）：
+  //  - SSR 部署 → src/pages/api/bili-api.ts
+  //  - ESA 纯静态部署 → esa/functions/bili-api.ts 边缘函数
+  // 注：不要改回浏览器 JSONP 直连 B站 —— <script> 跨域加载时 Referer 是本站域名，
+  //     B站对「陌生第三方 Referer + jsonp callback」的风控会直接返回 403。
   const [avatarSrc, setAvatarSrc] = useState(
     bilibiliUid ? `/api/bili-api?action=avatar&uid=${bilibiliUid}` : staticAvatar || ""
   );
-  // B站头像代理失败（网络/源失效/服务端风控）时回退到内置静态头像，避免空白/裂图
+  // 头像代理失败（如服务端出口 IP 被 B站风控 / 网络异常）时回退到内置静态头像，避免空白/裂图
   const handleAvatarError = () => {
     if (staticAvatar && avatarSrc !== staticAvatar) setAvatarSrc(staticAvatar);
   };
@@ -185,15 +190,18 @@ export default function Hero({
     return () => clearTimeout(timer);
   }, [titleIndex, displayText, isDeleting, heroTitles]);
 
-  // 客户端定时检测直播状态 —— 通过本站服务端 API 代理请求 B站（5 分钟缓存限频）
+  // 客户端定时检测直播状态 —— 走本站服务端代理 /api/bili-api（Referer 可控，5 分钟缓存限频）
   useEffect(() => {
     if (!bilibiliUid) return;
 
+    let alive = true;
     const checkLive = async () => {
       try {
         const params = new URLSearchParams({ uid: String(bilibiliUid) });
         const res = await fetch(`/api/bili-api?${params}`);
+        if (!res.ok) return;
         const json = await res.json();
+        if (!alive) return;
         setIsLive(json.live);
         if (json.roomId) setLiveRoom(json.roomId);
       } catch {
@@ -203,7 +211,10 @@ export default function Hero({
 
     checkLive();
     const interval = setInterval(checkLive, 300000);
-    return () => clearInterval(interval);
+    return () => {
+      alive = false;
+      clearInterval(interval);
+    };
   }, [bilibiliUid]);
 
   useEffect(() => {
