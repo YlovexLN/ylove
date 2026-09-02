@@ -1,9 +1,12 @@
 # CNB → GitHub 镜像同步
 # main 分支有推送（直接 push 或 PR 合并）时，自动同步到 GitHub 仓库 YlovexLN/ylove
-# 依赖 CNB 构建环境变量：GH_TOKEN（GitHub Personal Access Token，需 repo 权限）
+# GH_TOKEN 通过 imports 从密钥仓库 ylove520/Token 的 env.yml 注入（需 repo 权限）
 main:
   push:
     - name: sync-to-github
+      # 引用密钥仓库 ylove520/Token 的 env.yml，注入 GH_TOKEN 等敏感环境变量
+      imports:
+        - https://cnb.cool/ylove520/Token/-/blob/main/env.yml
       lock:
         key: github-sync
         wait: true               # 排队等待
