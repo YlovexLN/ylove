@@ -11,6 +11,7 @@
   DEPLOY_TARGET = "netlify"
   # 页脚/内容开关（可留空使用默认值）
   # FOOTER_SHOW = "true"
+  FOOTER_ITEMS = '{"CDN - ":{"text":"Cloudflare","url":"https://www.cloudflare.com"},"HOST - ":{"text":"Netlify","url":"https://app.netlify.com"}}'
   # FOOTER_ICP_SHOW = "false"
   # 赞助总开关（false 隐藏首页赞助链接并禁用 /sponsor 页面）
   # SPONSOR_SHOW = "false"
