@@ -68,7 +68,7 @@ pnpm preview     # 本地预览构建结果
 
 ## ☁️ 部署
 
-本项目为 SSR 模式（含 `/api/bili-api` 运行时接口），可直接部署到 **Cloudflare Workers**、**Netlify** 或 **腾讯云 EdgeOne**。B站头像与直播检测统一走本站 `/api/bili-api` **服务端代理**：服务端先向 B站首页发起一次握手，获取 B站下发给任意匿名访客的 `buvid3` cookie，再携带该 cookie + 完整浏览器 UA + 匹配 Referer 请求 B站接口，有效规避数据中心出口 IP 被风控（-352/-412）。SSR 部署命中 `src/pages/api/bili-api.ts`，ESA 纯静态部署命中 `esa/functions/bili-api.ts` 边缘函数。头像另有内置静态头像兜底（失败 onError 回退不裂图）、1 小时缓存，直播检测带 5 分钟缓存限频。
+本项目为 SSR 模式（含 `/api/bili-api` 运行时接口），可直接部署到 **Cloudflare Workers**、**Netlify** 或 **腾讯云 EdgeOne**。B站头像与直播检测统一走本站 `/api/bili-api` **服务端代理**：服务端先向 B站首页发起一次握手，获取 B站下发给任意匿名访客的 `buvid3` cookie，再携带该 cookie + 完整浏览器 UA + 匹配 Referer 请求 B站接口，有效规避数据中心出口 IP 被风控（-352/-412）。SSR 部署命中 `src/pages/api/bili-api.ts`，ESA 纯静态部署命中 `esa/functions/bili-api.ts` 边缘函数。头像直接取自 `x/web-interface/card` 的 `data.card.face` 再代理回源，另有内置静态头像兜底（失败 onError 回退不裂图）、1 小时缓存；直播状态（card 接口不含 live 信息）单独经直播间接口查询，带 5 分钟缓存限频。
 
 > ⚠️ 请勿改回「浏览器 JSONP 直连 B站」：`<script>` 跨域加载时 `Referer` 是本站域名，B站对陌生第三方 Referer + `jsonp callback` 的风控会直接返回 **403**。
 
