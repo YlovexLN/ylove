@@ -7,7 +7,7 @@
 # 会与 GitHub→CNB 主镜像形成无限互推死循环，并可能误删 CNB 本地开发分支。改手动后循环被彻底切断。
 # GH_TOKEN 通过 imports 从密钥仓库 ylove520/Token 的 env.yml 注入（需 repo 权限）
 # 按钮定义见 .cnb/web_trigger.yml（限定 ^main$ 分支）
-$:
+main:
   web_trigger_sync_to_github:
     - name: sync-cnb-to-github
       # 引用密钥仓库 ylove520/Token 的 env.yml，注入 GH_TOKEN 等敏感环境变量
