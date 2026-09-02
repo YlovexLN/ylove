@@ -46,6 +46,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useLivePulse } from "@/hooks/useLivePulse";
 import { getRingStyle } from "@/utils/live-ring";
+import { getBiliFaceUrl, getBiliLiveStatus } from "@/utils/bili-client";
 
 interface Social {
   name: string;
@@ -140,13 +141,27 @@ export default function Hero({
   const [showScrollHint, setShowScrollHint] = useState(true);
   const pulseProgress = useLivePulse(isLive);
   const staticAvatar = avatar;
-  const [avatarSrc, setAvatarSrc] = useState(
-    bilibiliUid ? `/api/bili-api?action=avatar&uid=${bilibiliUid}` : staticAvatar || ""
-  );
-  // B站头像代理失败（如部署到 Cloudflare Workers 被风控）时回退到内置静态头像，避免空白/裂图
+  const [avatarSrc, setAvatarSrc] = useState(staticAvatar || "");
+  // 头像图加载失败（网络/源失效）时回退到内置静态头像，避免空白/裂图
   const handleAvatarError = () => {
-    if (staticAvatar && avatarSrc !== staticAvatar) setAvatarSrc(staticAvatar);
+    if (avatarSrc && avatarSrc !== staticAvatar) setAvatarSrc(staticAvatar || "");
   };
+  // 【浏览器端】直连 B站获取真实头像 —— 在用户浏览器内用 JSONP 请求 B站接口，
+  // 发起方是用户真实 IP，绕开 Cloudflare Workers 等服务器出口被 B站风控屏蔽的问题
+  // （服务端 fetch B站会被 -352 拦，浏览器 JSONP 不受 CORS / Cloudflare IP 影响）。
+  useEffect(() => {
+    if (!bilibiliUid) return;
+    let alive = true;
+    (async () => {
+      const face = await getBiliFaceUrl(bilibiliUid);
+      if (alive && face) {
+        setAvatarSrc(face);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [bilibiliUid]);
   const typeRef = useRef({ i: 0, deleting: false });
 
   // 打字机效果
@@ -185,17 +200,17 @@ export default function Hero({
     return () => clearTimeout(timer);
   }, [titleIndex, displayText, isDeleting, heroTitles]);
 
-  // 客户端定时检测直播状态
+  // 客户端定时检测直播状态 —— 同样在用户浏览器用 JSONP 直连 B站（绕开服务器 IP 风控），5 分钟一次
   useEffect(() => {
     if (!bilibiliUid) return;
 
+    let alive = true;
     const checkLive = async () => {
       try {
-        const params = new URLSearchParams({ uid: String(bilibiliUid) });
-        const res = await fetch(`/api/bili-api?${params}`);
-        const json = await res.json();
-        setIsLive(json.live);
-        if (json.roomId) setLiveRoom(json.roomId);
+        const { live, roomId } = await getBiliLiveStatus(bilibiliUid);
+        if (!alive) return;
+        setIsLive(live);
+        if (roomId) setLiveRoom(roomId);
       } catch {
         // 静默失败
       }
@@ -203,7 +218,10 @@ export default function Hero({
 
     checkLive();
     const interval = setInterval(checkLive, 300000);
-    return () => clearInterval(interval);
+    return () => {
+      alive = false;
+      clearInterval(interval);
+    };
   }, [bilibiliUid]);
 
   useEffect(() => {
