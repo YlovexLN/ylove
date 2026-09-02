@@ -14,6 +14,10 @@
  */
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
 
+// 头像拿不到真实 URL（数据中心出口 IP 被 B站 -412/-352 风控）时的内置兜底头像。
+// 返回 302 重定向到该静态资源（ESA Pages assets 托管），客户端/img 自动跟随成 200。
+const FALLBACK_AVATAR = "/avatars/avatar.jpg";
+
 let cachedFace = "";
 let cachedUid = "";
 let buvidCookie = "";
@@ -59,8 +63,14 @@ async function getFaceUrl(uid: string): Promise<string> {
       `https://api.bilibili.com/x/web-interface/card?mid=${uid}`,
       { headers }
     );
-    const json: any = await res.json();
-    const face = json.code === 0 ? json.data?.card?.face || "" : "";
+    const text = await res.text();
+    let json: any = null;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      return "";
+    }
+    const face = json?.code === 0 ? json?.data?.card?.face || "" : "";
     if (face) {
       cachedFace = face;
       cachedUid = uid;
@@ -92,21 +102,32 @@ export default {
 
     // 头像代理
     if (action === "avatar") {
-      const faceUrl = await getFaceUrl(uid);
-      if (!faceUrl) return new Response("", { status: 500 });
       try {
-        const headers = await buildHeaders("https://space.bilibili.com/");
-        const imgRes = await fetch(faceUrl, { headers });
-        return new Response(imgRes.body, {
-          status: 200,
-          headers: {
-            "Content-Type": imgRes.headers.get("content-type") || "image/jpeg",
-            "Cache-Control": "public, max-age=3600",
-          },
-        });
+        const faceUrl = await getFaceUrl(uid);
+        if (faceUrl) {
+          const headers = await buildHeaders("https://space.bilibili.com/");
+          const imgRes = await fetch(faceUrl, { headers });
+          if (imgRes.ok) {
+            return new Response(imgRes.body, {
+              status: 200,
+              headers: {
+                "Content-Type": imgRes.headers.get("content-type") || "image/jpeg",
+                "Cache-Control": "public, max-age=3600",
+              },
+            });
+          }
+        }
       } catch {
-        return new Response("", { status: 500 });
+        // 抓真实头像失败 → 落到静态兜底，保证接口稳定返回而非 500
       }
+      // 拿不到真实头像 → 重定向到内置静态头像（客户端自动跟随成 200，页面不裂图）
+      return new Response(null, {
+        status: 302,
+        headers: {
+          Location: FALLBACK_AVATAR,
+          "Cache-Control": "no-store",
+        },
+      });
     }
 
     // 直播状态检测 — 通过 UID 自动查询直播间
@@ -119,8 +140,14 @@ export default {
         `https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid=${uid}`,
         { headers }
       );
-      const roomJson: any = await roomRes.json();
-      if (roomJson.code === 0 && roomJson.data) {
+      const text = await roomRes.text();
+      let roomJson: any = null;
+      try {
+        roomJson = JSON.parse(text);
+      } catch {
+        roomJson = null;
+      }
+      if (roomJson && roomJson.code === 0 && roomJson.data) {
         resolvedRoomId = String(roomJson.data.roomid || "");
         live = roomJson.data.liveStatus === 1;
       }

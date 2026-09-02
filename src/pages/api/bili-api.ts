@@ -12,6 +12,14 @@ const BILI_HEADERS = {
 // 直播检测缓存时长：5 分钟/次（README 承诺的限频，避免频繁调用触发 B站风控）
 const LIVE_TTL = 5 * 60 * 1000;
 
+// 头像代理拿不到真实头像（数据中心出口 IP 被 B站 -412/-352 风控）时的内置兜底头像。
+// public/avatars/avatar.jpg 作为站点静态资源由平台托管，返回 302 重定向，客户端/img 会自动跟随成 200。
+// 与前端 Hero 的 onError 兜底（config.toml avatar = "/avatars/avatar.jpg"）共用同一份资源。
+const FALLBACK_AVATAR = "/avatars/avatar.jpg";
+
+// 出口网络可用但 B站接口抖动时做一次重试，提升成功率（数据中心 IP 偶发风控）
+const MAX_ATTEMPTS = 2;
+
 let cachedFace = "";
 let cachedUid = "";
 let cachedLive: { live: boolean; roomId: string; time: number } | null = null;
@@ -54,44 +62,71 @@ async function buildHeaders(referer: string): Promise<Record<string, string>> {
   };
 }
 
+// 请求 B站 card 接口拿头像 URL；数据中心 IP 被风控（-412 / -352 / 非 JSON）时返回空字符串。
+// 增加一次重试，规避偶发风控；内部异常不抛出，交由上层走兜底头像。
 async function getFaceUrl(uid: string): Promise<string> {
   if (cachedUid === uid && cachedFace) return cachedFace;
-  try {
-    const headers = await buildHeaders("https://space.bilibili.com/");
-    const res = await fetch(`https://api.bilibili.com/x/web-interface/card?mid=${uid}`, {
-      headers,
-    });
-    const json: any = await res.json();
-    const face = json.code === 0 ? json.data?.card?.face || "" : "";
-    if (face) {
-      cachedFace = face;
-      cachedUid = uid;
+  for (let i = 0; i < MAX_ATTEMPTS; i++) {
+    try {
+      const headers = await buildHeaders("https://space.bilibili.com/");
+      const res = await fetch(`https://api.bilibili.com/x/web-interface/card?mid=${uid}`, {
+        headers,
+      });
+      const text = await res.text();
+      let json: any = null;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        // 响应非 JSON（如 -412 风控校验页/HTML），视为失败，走重试
+        continue;
+      }
+      const face =
+        json?.code === 0 && json.data?.card?.face
+          ? json.data.card.face
+          : "";
+      if (face) {
+        cachedFace = face;
+        cachedUid = uid;
+        return face;
+      }
+    } catch {
+      // 网络异常，下一轮重试
     }
-    return face;
-  } catch {
-    return "";
   }
+  return "";
 }
 
 async function getLiveStatus(uid: string) {
   // 5 分钟内复用上次结果，减少 B站 API 调用（Worker 内存缓存，重部署后失效属正常）
   if (cachedLive && Date.now() - cachedLive.time < LIVE_TTL) return cachedLive;
-  try {
-    const headers = await buildHeaders("https://live.bilibili.com/");
-    const roomRes = await fetch(`https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid=${uid}`, {
-      headers,
-    });
-    const roomJson: any = await roomRes.json();
-    const data = roomJson.data || {};
-    cachedLive = {
-      live: roomJson.code === 0 && data.liveStatus === 1,
-      roomId: String(data.roomid || ""),
-      time: Date.now(),
-    };
-  } catch {
-    // 失败也缓存，避免风控/网络异常时每 5 分钟重试轰炸
-    cachedLive = { live: false, roomId: "", time: Date.now() };
+  for (let i = 0; i < MAX_ATTEMPTS; i++) {
+    try {
+      const headers = await buildHeaders("https://live.bilibili.com/");
+      const roomRes = await fetch(`https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid=${uid}`, {
+        headers,
+      });
+      const text = await roomRes.text();
+      let roomJson: any = null;
+      try {
+        roomJson = JSON.parse(text);
+      } catch {
+        continue;
+      }
+      const data = roomJson?.data || {};
+      if (roomJson?.code === 0 && data) {
+        cachedLive = {
+          live: data.liveStatus === 1,
+          roomId: String(data.roomid || ""),
+          time: Date.now(),
+        };
+        return cachedLive;
+      }
+    } catch {
+      // 网络异常，下一轮重试
+    }
   }
+  // 仍失败才缓存兜底结果，避免每 5 分钟重试轰炸
+  cachedLive = { live: false, roomId: "", time: Date.now() };
   return cachedLive;
 }
 
@@ -106,23 +141,34 @@ export const GET: APIRoute = async ({ request }) => {
 
   // 头像代理
   if (action === "avatar") {
-    const faceUrl = await getFaceUrl(uid);
-    if (!faceUrl) return new Response("", { status: 500 });
     try {
-      const headers = await buildHeaders("https://space.bilibili.com/");
-      const imgRes = await fetch(faceUrl, { headers });
-      // 直接返回 ArrayBuffer（Cloudflare Workers 无 Buffer 全局对象，Node/Worker 均支持）
-      const body = await imgRes.arrayBuffer();
-      return new Response(body, {
-        status: 200,
-        headers: {
-          "Content-Type": imgRes.headers.get("content-type") || "image/jpeg",
-          "Cache-Control": "public, max-age=3600",
-        },
-      });
+      const faceUrl = await getFaceUrl(uid);
+      if (faceUrl) {
+        const headers = await buildHeaders("https://space.bilibili.com/");
+        const imgRes = await fetch(faceUrl, { headers });
+        if (imgRes.ok) {
+          // 直接返回 ArrayBuffer（Cloudflare Workers 无 Buffer 全局对象，Node/Worker 均支持）
+          const body = await imgRes.arrayBuffer();
+          return new Response(body, {
+            status: 200,
+            headers: {
+              "Content-Type": imgRes.headers.get("content-type") || "image/jpeg",
+              "Cache-Control": "public, max-age=3600",
+            },
+          });
+        }
+      }
     } catch {
-      return new Response("", { status: 500 });
+      // 抓真实头像整体失败，落到下方静态兜底，保证接口稳定返回而非 500
     }
+    // 拿不到真实头像 / 抓图失败 → 重定向到内置静态头像（客户端自动跟随成 200，页面不裂图）
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: FALLBACK_AVATAR,
+        "Cache-Control": "no-store",
+      },
+    });
   }
 
   // 直播状态检测 — 通过 UID 自动查询直播间（5 分钟缓存）
