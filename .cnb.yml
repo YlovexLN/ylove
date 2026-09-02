@@ -1,9 +1,15 @@
-# CNB → GitHub 镜像同步
-# main 分支有推送（直接 push 或 PR 合并）时，自动同步到 GitHub 仓库 YlovexLN/ylove
+# 例外反向同步：CNB（镜像）个别开发 → GitHub（主仓库）
+# 方向总览：
+#   GitHub(main) ──自动──▶ CNB         主镜像，GitHub 为主仓库（见 .github/workflows/mirror-cnb.yml）
+#   CNB(main)     ──手动──▶ GitHub     仅“个别情况在 CNB 开发”时，点 CNB 的“同步到 GitHub”按钮回推
+#
+# 为什么是手动：CNB 平时是 GitHub 的只读镜像。若像之前那样在 CNB 任意 push 时自动反向回 GitHub，
+# 会与 GitHub→CNB 主镜像形成无限互推死循环，并可能误删 CNB 本地开发分支。改手动后循环被彻底切断。
 # GH_TOKEN 通过 imports 从密钥仓库 ylove520/Token 的 env.yml 注入（需 repo 权限）
-main:
-  push:
-    - name: sync-to-github
+# 按钮定义见 .cnb/web_trigger.yml（限定 ^main$ 分支）
+$:
+  web_trigger_sync_to_github:
+    - name: sync-cnb-to-github
       # 引用密钥仓库 ylove520/Token 的 env.yml，注入 GH_TOKEN 等敏感环境变量
       imports:
         - https://cnb.cool/ylove520/Token/-/blob/main/env.yml
@@ -15,7 +21,7 @@ main:
         - name: push-to-github
           script: |
             set -e
-            echo "==> CNB→GitHub 同步: $CNB_COMMIT_SHORT → YlovexLN/ylove"
+            echo "==> 手动反向同步: CNB main → YlovexLN/ylove"
             [ -n "$GH_TOKEN" ] || { echo "错误: GH_TOKEN 未配置"; exit 1; }
 
             # 添加 GitHub remote（令牌经 HTTP Header 传输，避免泄露在 URL/日志中）
@@ -29,11 +35,28 @@ main:
             if [ "$(git rev-parse --is-shallow-repository 2>/dev/null)" = "true" ]; then
               git fetch --unshallow origin || true
             fi
-            git fetch origin --tags --force || true
+            git fetch github main --tags --force || true
 
-            # 推送 main + 标签到 GitHub，网络失败重试 3 次
+            # 比较 CNB main 与 GitHub main，判断能否快进（本地变量避免 CNB_ 保留前缀）
+            LOCAL_HEAD=$(git rev-parse HEAD)
+            GH_MAIN_REF=$(git rev-parse github/main 2>/dev/null || echo "none")
+
+            if [ "$GH_MAIN_REF" = "none" ] || [ "$LOCAL_HEAD" = "$GH_MAIN_REF" ]; then
+              echo "CNB main 与 GitHub main 一致，无需同步。"
+              exit 0
+            fi
+
+            # 判断 CNB main 是否包含 GitHub main（GitHub 不应领先于 CNB，否则先同步 GitHub 主仓库）
+            if ! git merge-base --is-ancestor "$GH_MAIN_REF" "$LOCAL_HEAD"; then
+              echo "❌ GitHub main 领先于 CNB main（说明 GitHub 主仓库有更新尚未镜像到 CNB）。"
+              echo "   请先在 GitHub 主仓库开发/合并，待其自动镜像到 CNB 后再做反向同步，避免覆盖主仓库。"
+              exit 1
+            fi
+
+            # CNB main 领先 GitHub main（存在“个别在 CNB 的开发改动”），快进推送到 GitHub
+            echo "CNB main 领先 GitHub main $(git rev-list --count "$GH_MAIN_REF..$LOCAL_HEAD") 个提交，推送中..."
             for i in 1 2 3; do
-              git push github "HEAD:refs/heads/main" "refs/tags/*:refs/tags/*" && exit 0
+              git push github "HEAD:refs/heads/main" "refs/tags/*:refs/tags/*" && { echo "✅ 已同步到 GitHub 主仓库"; exit 0; }
               echo "推送失败（第 $i 次），5 秒后重试..."
               sleep 5
             done
