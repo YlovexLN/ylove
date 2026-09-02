@@ -13,7 +13,7 @@
   # FOOTER_SHOW = "true"
   # FOOTER_ICP_SHOW = "false"
   # 赞助总开关（false 隐藏首页赞助链接并禁用 /sponsor 页面）
-  SPONSOR_SHOW = "false"
+  # SPONSOR_SHOW = "false"
   PAGE_MODE = "single"
   BILIBILI_UID = "24421599"
   # STRAPI_URL = ""
