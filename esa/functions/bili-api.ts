@@ -14,9 +14,9 @@
  */
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
 
-// 头像拿不到真实 URL（数据中心出口 IP 被 B站 -412/-352 风控）时的内置兜底头像。
-// 返回 302 重定向到该静态资源（ESA Pages assets 托管），客户端/img 自动跟随成 200。
-const FALLBACK_AVATAR = "/avatars/avatar.jpg";
+// 头像拿不到真实 URL（数据中心出口 IP 被 B站 -412/-352 风控）时，不再由本函数 302 到本地图片，
+// 而是返回失败状态码，交由前端 Hero 的 <img> onError 回退到 config.toml 中填写的 avatar 兜底图。
+// 这样用户可在配置文件里自由指定兜底头像（不必受写死的本地路径限制），跨 SSR/ESA 部署行为一致。
 
 let cachedFace = "";
 let cachedUid = "";
@@ -152,13 +152,11 @@ export default {
       } catch {
         // 抓真实头像失败 → 落到静态兜底，保证接口稳定返回而非 500
       }
-      // 拿不到真实头像 → 重定向到内置静态头像（客户端自动跟随成 200，页面不裂图）
-      return new Response(null, {
-        status: 302,
-        headers: {
-          Location: FALLBACK_AVATAR,
-          "Cache-Control": "no-store",
-        },
+      // 拿不到真实头像 → 返回失败状态（不返回图片），触发 <img> onError，
+      // 前端据此回退到 config.toml avatar 配置的兜底头像，保证页面不裂图空白。
+      return new Response("avatar unavailable", {
+        status: 404,
+        headers: { "Content-Type": "text/plain", "Cache-Control": "no-store" },
       });
     }
 
