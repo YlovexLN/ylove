@@ -101,14 +101,14 @@
 
    产物：`.vercel/output/`（遵循 Vercel Build Output API，`_render` 函数处理页面与 `/api/bili-api` 等路由）。
 
-   > `build:vercel` 已通过 `cross-env` 内联 `DEPLOY_TARGET=vercel` 与页面模式、B站 UID、页脚平台标识（`FOOTER_ITEMS`：CDN - Vercel Edge / HOST - Vercel）等覆盖项，导入 Vercel 后无需再逐个配置。
+   > `build:vercel` 仅内联 `DEPLOY_TARGET=vercel` 用于选择适配器，其余内容（页脚、B站 UID、页面模式等）默认沿用 `config.toml`。如需覆盖，请在 Vercel 项目环境变量中配置。
 
 2. **部署**
    - 推送到 Git 仓库后，在 [Vercel 控制台](https://vercel.com) → **Add New → Project → Import** 导入仓库，`Framework Preset` 选 **Astro**（可自动识别）。
    - 根目录 `vercel.json` 已配置构建命令（`pnpm build:vercel`），`@astrojs/vercel` 经 `.vercel/output` 的 Build Output API 自动构建部署。
 
 3. **说明**
-   - 环境变量（如 `STRAPI_URL` / 再次覆盖 `PAGE_MODE` 等）在 Vercel 项目 `Settings → Environment Variables` 中配置，重新 Deploy 生效（Vercel 不支持将环境变量写入 `vercel.json`）。
+   - 页脚内容（`FOOTER_ITEMS`）、`PAGE_MODE`、`BILIBILI_UID`、`STRAPI_URL` 等环境变量在 Vercel 项目 `Settings → Environment Variables` 中配置，重新 Deploy 生效（Vercel 不支持将环境变量写入 `vercel.json`）；未设置时默认沿用 `config.toml`。
    - 适配器已验证：`DEPLOY_TARGET=vercel` 时使用 `@astrojs/vercel`，产物 `config.json` 中 `/api/bili-api`、`/api/works`、`/sponsor` 等路由均指向 `_render` 函数。
 
 ## 部署到腾讯云 EdgeOne ⏳（待官方适配 Astro 7）
