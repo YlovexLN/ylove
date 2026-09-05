@@ -132,13 +132,13 @@ pnpm preview     # 本地预览构建结果
    # 输出 .vercel/output，可在本地用 vercel dev 预览（需安装 vercel CLI）
    ```
 
-   > `build:vercel` 已通过 `cross-env` 内联 `DEPLOY_TARGET=vercel`，并把页面模式、B站 UID 与页脚平台标识（`FOOTER_ITEMS`：CDN - Vercel Edge / HOST - Vercel）等覆盖写进脚本，无需在 Vercel 再逐个配置即可按 Vercel 品牌渲染。
+   > `build:vercel` 仅内联 `DEPLOY_TARGET=vercel` 用于选择适配器，其余内容（页脚、B站 UID、页面模式等）默认沿用 `config.toml`。如按 Vercel 品牌覆盖页脚等内容，请在 Vercel 项目环境变量中配置。
 
 2. **推送到 Git 仓库**，在 [Vercel 控制台](https://vercel.com) 点击 **Add New → Project → Import** 选择本仓库，`Framework Preset` 选 **Astro**（也可自动识别）。
 
    > 根目录的 `vercel.json` 已配置好构建命令（`pnpm build:vercel`）；`@astrojs/vercel` 经 `.vercel/output` 的 Build Output API 自动构建部署，Node 版本满足 Astro 7 要求（≥ 22.12）。
 
-3. **环境变量（可选）**：`build:vercel` 已内置常用覆盖项。如需再覆盖（如切换 `PAGE_MODE`、关闭页脚/赞助等），在 Vercel 项目 `Settings → Environment Variables` 中添加（Vercel 不支持把环境变量写进 `vercel.json`），见下方「环境变量」章节。
+3. **环境变量（可选）**：页脚、B站 UID、页面模式等如需覆盖默认 `config.toml`，在 Vercel 项目 `Settings → Environment Variables` 中添加对应变量与值（如 `FOOTER_ITEMS`、`PAGE_MODE`、`BILIBILI_UID`），重新 Deploy 生效（Vercel 不支持把环境变量写进 `vercel.json`），见下方「环境变量」章节。
 
 ### 部署到腾讯云 EdgeOne（待适配 Astro 7）
 
@@ -200,7 +200,7 @@ EdgeOne Makers 支持连接 GitHub / GitLab / Bitbucket / Gitee 仓库，推送�
 
 **Netlify** 设置方式：项目 `Site configuration → Environment variables` 中添加变量与值，重新 Deploy 生效。
 
-**Vercel** 设置方式：`build:vercel` 已内置常用覆盖项；如需再覆盖，在 Vercel 项目 `Settings → Environment Variables` 中添加变量与值，重新 Deploy 生效（Vercel 不支持把环境变量写入 `vercel.json`）。
+**Vercel** 设置方式：在 Vercel 项目 `Settings → Environment Variables` 中添加变量与值，重新 Deploy 生效（Vercel 不支持把环境变量写入 `vercel.json`）。默认未设置时沿用 `config.toml`。
 
 **EdgeOne** 设置方式：
 
