@@ -5,11 +5,13 @@ import tailwindcss from '@tailwindcss/vite';
 import node from '@astrojs/node';
 import cloudflare from '@astrojs/cloudflare';
 import netlify from '@astrojs/netlify';
+import vercel from '@astrojs/vercel';
 import edgeone from '@edgeone/astro';
 
 // 部署目标：通过环境变量选择，构建时无需修改本文件
 //   DEPLOY_TARGET=cloudflare → Cloudflare Workers（产物 dist/client + dist/server）
 //   DEPLOY_TARGET=netlify    → Netlify Functions（产物 dist/ + .netlify/）
+//   DEPLOY_TARGET=vercel     → Vercel Serverless（产物 .vercel/output/）
 //   DEPLOY_TARGET=edgeone    → EdgeOne Makers（产物 .edgeone/，等官方适配 Astro 7）
 //   DEPLOY_TARGET=esa        → 阿里云 ESA 函数和Pages（纯静态构建，动态接口走边缘函数，见 esa.jsonc）
 //   其他（默认）              → Node.js Standalone（本地开发 / 自托管）
@@ -25,6 +27,9 @@ function resolveAdapter() {
       return cloudflare();
     case 'netlify':
       return netlify();
+    case 'vercel':
+      // @astrojs/vercel 输出到 .vercel/output（Vercel Build Output API），Git 导入自动部署
+      return vercel();
     case 'edgeone':
       // ⚠️ @edgeone/astro@1.1.5 仅支持 Astro 5/6，尚未适配 Astro 7，
       // 构建会失败，等待官方发布新版本后再启用

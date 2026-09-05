@@ -11,6 +11,7 @@
 | Node（本地 / 自托管） | `pnpm build` / `pnpm build:node` | `dist/` |
 | Cloudflare Workers | `pnpm build:cloudflare` | `dist/client` + `dist/server` |
 | Netlify | `pnpm build:netlify` | `dist/` + `.netlify/` |
+| Vercel | `pnpm build:vercel` | `.vercel/output/` |
 | 腾讯云 EdgeOne | `pnpm build:edgeone`（待适配 Astro 7） | `.edgeone/` |
 
 ## 部署到 Node.js（自托管 / VPS）
@@ -90,6 +91,26 @@
    - 环境变量（如 `STRAPI_URL`）在 Netlify 项目 `Site configuration → Environment variables` 中配置，修改后重新 Deploy 生效。
    - SSR 函数入口验证：`.netlify/build/entry.mjs` 正确导出 `createHandler`（`function`）。
 
+## 部署到 Vercel ✅（已验证可构建）
+
+1. **构建**
+
+   ```sh
+   pnpm build:vercel
+   ```
+
+   产物：`.vercel/output/`（遵循 Vercel Build Output API，`_render` 函数处理页面与 `/api/bili-api` 等路由）。
+
+   > `build:vercel` 已通过 `cross-env` 内联 `DEPLOY_TARGET=vercel` 与页面模式、B站 UID、页脚平台标识（`FOOTER_ITEMS`：CDN - Vercel Edge / HOST - Vercel）等覆盖项，导入 Vercel 后无需再逐个配置。
+
+2. **部署**
+   - 推送到 Git 仓库后，在 [Vercel 控制台](https://vercel.com) → **Add New → Project → Import** 导入仓库，`Framework Preset` 选 **Astro**（可自动识别）。
+   - 根目录 `vercel.json` 已配置构建命令（`pnpm build:vercel`），`@astrojs/vercel` 经 `.vercel/output` 的 Build Output API 自动构建部署。
+
+3. **说明**
+   - 环境变量（如 `STRAPI_URL` / 再次覆盖 `PAGE_MODE` 等）在 Vercel 项目 `Settings → Environment Variables` 中配置，重新 Deploy 生效（Vercel 不支持将环境变量写入 `vercel.json`）。
+   - 适配器已验证：`DEPLOY_TARGET=vercel` 时使用 `@astrojs/vercel`，产物 `config.json` 中 `/api/bili-api`、`/api/works`、`/sponsor` 等路由均指向 `_render` 函数。
+
 ## 部署到腾讯云 EdgeOne ⏳（待官方适配 Astro 7）
 
 > **当前状态**：`@edgeone/astro@1.1.5` 仅支持 Astro 5 / 6，**尚未适配 Astro 7**。本项目已升级到 Astro 7，因此 `pnpm build:edgeone` 会失败。等待官方发布支持 Astro 7 的新版本后，移除 `astro.config.mjs` 中 `resolveAdapter()` 的 `edgeone` 分支注释即可恢复。
@@ -113,11 +134,11 @@
 
 ## 环境变量（覆盖配置文件）
 
-`Cloudflare Workers`、`Netlify` 与 `EdgeOne` 均支持用环境变量覆盖 `config.toml` 中的配置，免改代码。构建时读取，修改后需**重新构建部署**生效。
+`Cloudflare Workers`、`Netlify`、`Vercel` 与 `EdgeOne` 均支持用环境变量覆盖 `config.toml` 中的配置，免改代码。构建时读取，修改后需**重新构建部署**生效。
 
 | 变量 | 说明 |
 | --- | --- |
-| `DEPLOY_TARGET` | 构建目标：`node` / `cloudflare` / `netlify` / `edgeone`（构建脚本已自动设置） |
+| `DEPLOY_TARGET` | 构建目标：`node` / `cloudflare` / `netlify` / `vercel` / `edgeone`（构建脚本已自动设置） |
 | `PAGE_MODE` | 页面模式：`single` / `scroll` |
 | `BILIBILI_UID` | B站 UID |
 | `STRAPI_URL` / `STRAPI_TOKEN` | Strapi 数据源地址与 Token |

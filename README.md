@@ -68,11 +68,11 @@ pnpm preview     # 本地预览构建结果
 
 ## ☁️ 部署
 
-本项目为 SSR 模式（含 `/api/bili-api` 运行时接口），可直接部署到 **Cloudflare Workers**、**Netlify** 或 **腾讯云 EdgeOne**。B站头像与直播检测统一走本站 `/api/bili-api` **服务端代理**：服务端先向 B站首页发起一次握手，获取 B站下发给任意匿名访客的 `buvid3` cookie，再携带该 cookie + 完整浏览器 UA + 匹配 Referer 请求 B站接口，有效规避数据中心出口 IP 被风控（-352/-412）。SSR 部署命中 `src/pages/api/bili-api.ts`，ESA 纯静态部署命中 `esa/functions/bili-api.ts` 边缘函数。头像直接取自 `x/web-interface/card` 的 `data.card.face` 再代理回源，另有内置静态头像兜底（失败 onError 回退不裂图）、1 小时缓存；直播状态（card 接口不含 live 信息）单独经直播间接口查询，带 5 分钟缓存限频。
+本项目为 SSR 模式（含 `/api/bili-api` 运行时接口），可直接部署到 **Cloudflare Workers**、**Netlify**、**Vercel** 或 **腾讯云 EdgeOne**。B站头像与直播检测统一走本站 `/api/bili-api` **服务端代理**：服务端先向 B站首页发起一次握手，获取 B站下发给任意匿名访客的 `buvid3` cookie，再携带该 cookie + 完整浏览器 UA + 匹配 Referer 请求 B站接口，有效规避数据中心出口 IP 被风控（-352/-412）。SSR 部署命中 `src/pages/api/bili-api.ts`，ESA 纯静态部署命中 `esa/functions/bili-api.ts` 边缘函数。头像直接取自 `x/web-interface/card` 的 `data.card.face` 再代理回源，另有内置静态头像兜底（失败 onError 回退不裂图）、1 小时缓存；直播状态（card 接口不含 live 信息）单独经直播间接口查询，带 5 分钟缓存限频。
 
 > ⚠️ 请勿改回「浏览器 JSONP 直连 B站」：`<script>` 跨域加载时 `Referer` 是本站域名，B站对陌生第三方 Referer + `jsonp callback` 的风控会直接返回 **403**。
 
-> 💡 无需修改 `astro.config.mjs`：构建时通过环境变量 `DEPLOY_TARGET`（`cloudflare` / `netlify` / `node`，`edgeone` 待官方适配 Astro 7）自动选择适配器，对应脚本见下方。
+> 💡 无需修改 `astro.config.mjs`：构建时通过环境变量 `DEPLOY_TARGET`（`cloudflare` / `netlify` / `vercel` / `node`，`edgeone` 待官方适配 Astro 7）自动选择适配器，对应脚本见下方。
 
 ### 部署到 Cloudflare Workers
 
@@ -121,6 +121,25 @@ pnpm preview     # 本地预览构建结果
 
 3. **环境变量**：如需用环境变量覆盖配置，在 Netlify 项目 `Site configuration → Environment variables` 中添加，见下方「环境变量」章节。
 
+### 部署到 Vercel
+
+项目已内置 `@astrojs/vercel`，使用 `pnpm build:vercel` 即可生成 Vercel SSR 产物（`.vercel/output/`，遵循 Vercel Build Output API，页面与 `/api/bili-api` 等路由自动打包为 `_render` 函数）。
+
+1. **本地构建/预览**：
+
+   ```sh
+   pnpm build:vercel
+   # 输出 .vercel/output，可在本地用 vercel dev 预览（需安装 vercel CLI）
+   ```
+
+   > `build:vercel` 已通过 `cross-env` 内联 `DEPLOY_TARGET=vercel`，并把页面模式、B站 UID 与页脚平台标识（`FOOTER_ITEMS`：CDN - Vercel Edge / HOST - Vercel）等覆盖写进脚本，无需在 Vercel 再逐个配置即可按 Vercel 品牌渲染。
+
+2. **推送到 Git 仓库**，在 [Vercel 控制台](https://vercel.com) 点击 **Add New → Project → Import** 选择本仓库，`Framework Preset` 选 **Astro**（也可自动识别）。
+
+   > 根目录的 `vercel.json` 已配置好构建命令（`pnpm build:vercel`）；`@astrojs/vercel` 经 `.vercel/output` 的 Build Output API 自动构建部署，Node 版本满足 Astro 7 要求（≥ 22.12）。
+
+3. **环境变量（可选）**：`build:vercel` 已内置常用覆盖项。如需再覆盖（如切换 `PAGE_MODE`、关闭页脚/赞助等），在 Vercel 项目 `Settings → Environment Variables` 中添加（Vercel 不支持把环境变量写进 `vercel.json`），见下方「环境变量」章节。
+
 ### 部署到腾讯云 EdgeOne（待适配 Astro 7）
 
 EdgeOne Makers 支持连接 GitHub / GitLab / Bitbucket / Gitee 仓库，推送提交后自动构建部署。项目已内置 `@edgeone/astro`，无需修改 `astro.config.mjs`。
@@ -158,11 +177,11 @@ EdgeOne Makers 支持连接 GitHub / GitLab / Bitbucket / Gitee 仓库，推送�
 
 ### 环境变量（覆盖配置文件）
 
-**Cloudflare Workers**、**Netlify** 与 **EdgeOne** 均支持用环境变量覆盖 `config.toml` 中的配置，免改代码（构建时读取，修改后需重新构建部署）。
+**Cloudflare Workers**、**Netlify**、**Vercel** 与 **EdgeOne** 均支持用环境变量覆盖 `config.toml` 中的配置，免改代码（构建时读取，修改后需重新构建部署）。
 
 | 变量 | 说明 |
 | ------ | ------ |
-| `DEPLOY_TARGET` | 构建目标：`node` / `cloudflare` / `netlify` / `edgeone`（构建脚本已自动设置） |
+| `DEPLOY_TARGET` | 构建目标：`node` / `cloudflare` / `netlify` / `vercel` / `edgeone`（构建脚本已自动设置） |
 | `PAGE_MODE` | 页面模式：`single` / `scroll`（覆盖 `config.toml` 的 `mode`） |
 | `BILIBILI_UID` | B站 UID（覆盖 `config.toml` 的 `bilibili_uid`，用于头像自动获取） |
 | `STRAPI_URL` / `STRAPI_TOKEN` | Strapi 数据源地址与 Token（`content_source = "strapi"` 时使用） |
@@ -180,6 +199,8 @@ EdgeOne Makers 支持连接 GitHub / GitLab / Bitbucket / Gitee 仓库，推送�
 > ⚠️ 本项目通过 `import.meta.env.*` 在**构建时**读取这些变量（构建产物已静态注入，值须为字符串），修改后需重新构建部署。敏感值（如 `STRAPI_TOKEN`）请用控制台 `Variables and Secrets` 配置，勿写入仓库内的 `wrangler.jsonc`。
 
 **Netlify** 设置方式：项目 `Site configuration → Environment variables` 中添加变量与值，重新 Deploy 生效。
+
+**Vercel** 设置方式：`build:vercel` 已内置常用覆盖项；如需再覆盖，在 Vercel 项目 `Settings → Environment Variables` 中添加变量与值，重新 Deploy 生效（Vercel 不支持把环境变量写入 `vercel.json`）。
 
 **EdgeOne** 设置方式：
 
