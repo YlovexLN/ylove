@@ -3,7 +3,7 @@
 YLOVEXLN 个人主页：**Astro 7 + React 19 + TailwindCSS 4 + Font Awesome 7 + TypeScript** 静态站点，SSR 多目标部署。
 
 - **主题**：单一 MiniMal 极简风格（纯黑背景 + 翡翠绿强调），**无主题切换**
-- **字体**：寒蝉全圆体 (ChillRoundF)，经 CDN `fontsapi.zeoseven.com` 分片按需加载（仅提供字重 400），不使用 Google Fonts CDN；加粗由浏览器合成
+- **字体**：寒蝉全圆体 (ChillRoundF)，经 CDN `fontsapi.zeoseven.com` 分片按需加载，同时引入 `main`(字重 400) 与 `bold`(字重 700) 以提供真实加粗，不使用 Google Fonts CDN
 - **配置**：`config.toml` 经 `smol-toml` 解析，支持构建环境变量覆盖
 - **内容源**：`markdown`（`src/content/` 预写）或 `strapi`（构建时从 CMS 拉取）
 

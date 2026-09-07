@@ -1,4 +1,5 @@
 @import url("https://fontsapi.zeoseven.com/3/main/result.css");
+@import url("https://fontsapi.zeoseven.com/3/bold/result.css"); /* 真实 700 字重 */
 @import "tailwindcss";
 
 /* ─── Theme Variables ─── */
