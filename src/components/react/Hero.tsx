@@ -139,7 +139,7 @@ export default function Hero({
   const [liveRoom, setLiveRoom] = useState("");
   const [showScrollHint, setShowScrollHint] = useState(true);
   const pulseProgress = useLivePulse(isLive);
-  // 头像分层加载优化（解决 Netlify/Vercel 等海外 serverless 上 Hero 首屏慢的问题）：
+  // 头像分层加载优化（解决 Netlify 等海外 serverless 上 Hero 首屏慢的问题）：
   //  - 静态兜底头像 /avatars/avatar.jpg 作为底座随 HTML 直接输出，走平台 CDN 静态资源，秒开；
   //  - 动态真实头像经服务端代理 /api/bili-api?action=avatar 异步后台加载（Referer/UA 可控），
   //    加载成功（onLoad）后才淡入覆盖静态底座。代理慢/失败/被风控都不再阻塞 Hero 首屏。
