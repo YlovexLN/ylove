@@ -27,7 +27,7 @@
 
 ```text
 /
-├── public/              # 静态资源（头像、字体、作品图）
+├── public/              # 静态资源（头像、作品图、favicon）
 ├── src/
 │   ├── components/
 │   │   ├── react/       # React 交互组件（Hero、Navbar、Footer 等）
@@ -38,7 +38,7 @@
 │   ├── lib/             # 工具库（Strapi 客户端、作品解析）
 │   ├── pages/           # 页面路由
 │   │   └── api/         # 服务端 API（B站代理等）
-│   ├── styles/          # 全局样式与字体
+│   ├── styles/          # 全局样式
 │   └── utils/           # 工具函数
 ├── config.toml          # ⚙️ 站点配置（修改此处更新页面内容）
 ├── config.example.toml  # 配置模板
