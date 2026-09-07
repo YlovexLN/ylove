@@ -1,12 +1,13 @@
 /* 寒蝉全圆体 (ChillRoundF) - Self-hosted */
 /* Supports Chinese (simplified/traditional), Japanese, Latin */
+/* WOFF2：较原始 TTF 平均压缩约 58%，显著减小下载体积（自托管全量中文字体） */
 
 @font-face {
   font-family: 'ChillRoundF';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/fonts/ChillRoundFRegular.ttf') format('truetype');
+  src: url('/fonts/ChillRoundFRegular.woff2') format('woff2');
 }
 
 @font-face {
@@ -14,5 +15,5 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('/fonts/ChillRoundFBold.ttf') format('truetype');
+  src: url('/fonts/ChillRoundFBold.woff2') format('woff2');
 }
