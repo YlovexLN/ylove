@@ -1,7 +1,7 @@
 import { projects } from "@/data/projects";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Icon } from "@/components/ui/icon";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 
@@ -61,7 +61,7 @@ export default function Projects() {
                 {project.url && (
                   <Button variant="ghost" size="sm" asChild>
                     <a href={project.url} target="_blank" rel="noopener noreferrer">
-                      <FontAwesomeIcon icon={faExternalLinkAlt} className="h-3.5 w-3.5 mr-1.5" />
+                      <Icon icon={faExternalLinkAlt} className="h-3.5 w-3.5 mr-1.5" />
                       Live
                     </a>
                   </Button>
@@ -69,7 +69,7 @@ export default function Projects() {
                 {project.github && (
                   <Button variant="ghost" size="sm" asChild>
                     <a href={project.github} target="_blank" rel="noopener noreferrer">
-                      <FontAwesomeIcon icon={faGithub} className="h-3.5 w-3.5 mr-1.5" />
+                      <Icon icon={faGithub} className="h-3.5 w-3.5 mr-1.5" />
                       Code
                     </a>
                   </Button>

@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import { Icon, type FaIcon } from "@/components/ui/icon";
 import {
   faQrcode,
   faArrowLeft,
   faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { faWeixin, faAlipay } from "@fortawesome/free-brands-svg-icons";
-import QRCode from "qrcode";
 
 type PayMethod = "wechat" | "alipay";
 
@@ -34,7 +32,7 @@ interface SponsorContentProps {
 
 const methodMeta: Record<
   PayMethod,
-  { label: string; icon: IconDefinition; hint: string }
+  { label: string; icon: FaIcon; hint: string }
 > = {
   wechat: { label: "微信", icon: faWeixin, hint: "微信扫一扫，请我喝奶茶~" },
   alipay: { label: "支付宝", icon: faAlipay, hint: "支付宝扫一扫，请我喝奶茶~" },
@@ -50,25 +48,28 @@ function QrCanvas({ value }: { value: string }) {
     setStatus("loading");
     const canvas = canvasRef.current;
     if (!canvas) return;
-    // 默认黑白配色：黑色图案 + 白底，扫码最稳
-    QRCode.toCanvas(
-      canvas,
-      value,
-      {
-        width: 208,
-        margin: 2,
-        errorCorrectionLevel: "M",
-        color: {
-          dark: "#000000",
-          light: "#ffffff",
-        },
-      },
-      (err?: unknown) => {
+
+    (async () => {
+      try {
+        // 动态导入：二维码库只在真正需要绘制时才加载，不进入页面首屏 bundle
+        const { default: QRCode } = await import("qrcode");
         if (cancelled) return;
-        if (err) setStatus("error");
-        else setStatus("ready");
-      },
-    );
+        // 默认黑白配色：黑色图案 + 白底，扫码最稳
+        await QRCode.toCanvas(canvas, value, {
+          width: 208,
+          margin: 2,
+          errorCorrectionLevel: "M",
+          color: {
+            dark: "#000000",
+            light: "#ffffff",
+          },
+        });
+        if (!cancelled) setStatus("ready");
+      } catch {
+        if (!cancelled) setStatus("error");
+      }
+    })();
+
     return () => {
       cancelled = true;
     };
@@ -81,12 +82,12 @@ function QrCanvas({ value }: { value: string }) {
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-bg-card">
           {status === "error" ? (
             <>
-              <FontAwesomeIcon icon={faQrcode} className="mb-2 h-8 w-8 text-text-muted" />
+              <Icon icon={faQrcode} className="mb-2 h-8 w-8 text-text-muted" />
               <p className="text-xs text-text-muted">二维码加载失败</p>
             </>
           ) : (
             <>
-              <FontAwesomeIcon icon={faQrcode} className="mb-2 h-8 w-8 animate-pulse text-text-muted" />
+              <Icon icon={faQrcode} className="mb-2 h-8 w-8 animate-pulse text-text-muted" />
               <p className="text-xs text-text-muted">二维码加载中…</p>
             </>
           )}
@@ -127,7 +128,7 @@ export default function SponsorContent({ sponsor }: SponsorContentProps) {
                     : "text-text-secondary hover:bg-bg-card-hover hover:text-gold"
                 }`}
               >
-                <FontAwesomeIcon icon={methodMeta[m].icon} className="h-5 w-5" />
+                <Icon icon={methodMeta[m].icon} className="h-5 w-5" />
                 {methodMeta[m].label}
               </button>
             );
@@ -144,7 +145,7 @@ export default function SponsorContent({ sponsor }: SponsorContentProps) {
           <QrCanvas value={link} />
         ) : (
           <div className="mx-auto flex h-52 w-52 flex-col items-center justify-center rounded-lg border border-dashed border-border-default">
-            <FontAwesomeIcon icon={faQrcode} className="mb-3 h-11 w-11 text-text-muted" />
+            <Icon icon={faQrcode} className="mb-3 h-11 w-11 text-text-muted" />
             <p className="text-base text-text-muted">二维码制作中</p>
           </div>
         )}
@@ -175,7 +176,7 @@ export default function SponsorContent({ sponsor }: SponsorContentProps) {
             }}
           />
           前往爱发电赞助（还在认证创作者中）
-          <FontAwesomeIcon icon={faArrowRight} className="h-4 w-4" />
+          <Icon icon={faArrowRight} className="h-4 w-4" />
         </a>
       )}
 
@@ -184,7 +185,7 @@ export default function SponsorContent({ sponsor }: SponsorContentProps) {
         href="/"
         className="mt-6 inline-flex items-center gap-2 text-sm text-text-muted transition-colors duration-200 hover:text-gold"
       >
-        <FontAwesomeIcon icon={faArrowLeft} className="h-4 w-4" />
+        <Icon icon={faArrowLeft} className="h-4 w-4" />
         返回首页
       </a>
     </main>

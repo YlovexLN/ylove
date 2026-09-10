@@ -1,6 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import react from '@astrojs/react';
+import preact from '@astrojs/preact';
 import tailwindcss from '@tailwindcss/vite';
 import node from '@astrojs/node';
 import cloudflare from '@astrojs/cloudflare';
@@ -44,7 +44,9 @@ function resolveAdapter() {
 export default defineConfig({
   // ESA 为纯静态托管，其余目标 SSR
   output: isEsa ? 'static' : 'server',
-  integrations: [react()],
+  // Preact 的 compat 模式：保留 React 写法（hooks / forwardRef / 类型），
+  // 运行时由 preact/compat 提供，首屏 JS 相比 react-dom 减少约 165KB
+  integrations: [preact({ compat: true })],
   adapter: resolveAdapter(),
   vite: {
     plugins: [tailwindcss()],

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Icon } from "@/components/ui/icon";
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 import {
   Card,
@@ -105,7 +105,7 @@ export default function WorkCards({
                   className={`${buttonVariants({ variant: "outline" })} gap-2 text-base`}
                 >
                   点击前往
-                  <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="h-4 w-4" />
+                  <Icon icon={faArrowUpRightFromSquare} className="h-4 w-4" />
                 </a>
               )}
             </CardFooter>

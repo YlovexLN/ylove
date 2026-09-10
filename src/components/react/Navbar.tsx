@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Icon } from "@/components/ui/icon";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import { profile } from "@/data/profile";
 
@@ -42,7 +42,7 @@ export default function Navbar() {
               aria-label="GitHub"
               className="text-text-secondary hover:text-gold transition-colors"
             >
-              <FontAwesomeIcon icon={faGithub} className="h-5! w-5!" />
+              <Icon icon={faGithub} className="h-5! w-5!" />
             </a>
           )}
         </div>

@@ -1,6 +1,6 @@
 # 项目规范
 
-YLOVEXLN 个人主页：**Astro 7 + React 19 + TailwindCSS 4 + Font Awesome 7 + TypeScript** 静态站点，SSR 多目标部署。
+YLOVEXLN 个人主页：**Astro 7 + Preact 10（React compat 写法）+ TailwindCSS 4 + Font Awesome 7 图标数据 + TypeScript**，静态页 + SSR API，多目标部署。
 
 - **主题**：单一 MiniMal 极简风格（纯黑背景 + 翡翠绿强调），**无主题切换**
 - **字体**：寒蝉全圆体 (ChillRoundF)，经 CDN `fontsapi.zeoseven.com` 分片按需加载，同时引入 `main`(字重 400) 与 `bold`(字重 700) 以提供真实加粗，不使用 Google Fonts CDN
@@ -38,7 +38,7 @@ pnpm astro dev --background
 ```
 src/
 ├── components/
-│   ├── react/      # React 交互组件（Navbar、Hero、Footer、WorkCards、SponsorContent 等）
+│   ├── react/      # 交互组件（Preact compat，沿用 React 写法：Navbar、Hero、Footer、WorkCards、SponsorContent 等）
 │   └── ui/         # shadcn/ui 基础组件（Button、Input、Badge、Card 等）
 ├── content/        # Markdown 内容（posts / works）
 ├── data/           # 数据文件 + config.toml 解析（profile、sponsor、timeline 等）
@@ -73,6 +73,8 @@ src/
 
 - Astro 中**一个路由 = `src/pages/` 下一个 `.astro` 文件**：主页 `index.astro` → `/`，赞助页 `sponsor.astro` → `/sponsor`
 - 非独立页面的内容作为主页模块渲染（由 `[modules]` 控制），**无需单独 `.astro` 文件**
+- 主页与赞助页内容均为构建期数据，已用 `export const prerender = true` **静态化**（避免每次请求跑 SSR）；API 路由保持动态
+- 水合策略：首屏必需的 island 才用 `client:load`，非首屏交互用 `client:idle`，页面下方模块用 `client:visible`
 - API 路由：`src/pages/api/bili-api.ts`（`?action=avatar` 头像代理、`?uid=...` 直播状态检测；头像缓存 1 小时、直播检测限 5 分钟/次）
 
 ## 样式规范
@@ -90,7 +92,8 @@ src/
 ## 组件规范
 
 - **优先使用 shadcn/ui 组件** — 按钮用 `Button`、输入框用 `Input`、标签用 `Badge`、卡片用 `Card` 等。不复用造轮子，需要新 UI 组件时先检查 `src/components/ui/` 是否已有，没有则用 shadcn CLI 生成
-- **图标优先使用 Font Awesome** — 从 `@fortawesome/react-fontawesome` 导入组件，搭配 `@fortawesome/free-brands-svg-icons`（品牌图标）或 `@fortawesome/free-solid-svg-icons`（实心图标）使用
+- **图标用 `Icon` 组件 + Font Awesome 图标数据** — 从 `@/components/ui/icon` 导入 `Icon`（渲染内联 SVG，无运行时依赖），图标数据取自 `@fortawesome/free-brands-svg-icons`（品牌）或 `@fortawesome/free-solid-svg-icons`（实心）；不要引入 `@fortawesome/react-fontawesome` / `fontawesome-svg-core`（首屏会多出约 91KB JS）
+- **框架为 Preact（compat 模式）** — 交互组件沿用 React 写法（hooks / `forwardRef` 仍从 `react` 导入），由 `@astrojs/preact` 的 `compat` 映射到 `preact/compat`；不要新增 `react` / `react-dom` 依赖
 
 ## 工作流程
 

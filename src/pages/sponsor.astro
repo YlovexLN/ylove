@@ -6,6 +6,9 @@ import SponsorContent from "@/components/react/SponsorContent";
 import { profile } from "@/data/profile";
 import { sponsor, isSponsorEnabled } from "@/data/sponsor";
 
+// 赞助页内容同样为构建期数据，静态化；关闭时构建产物是跳回首页的重定向页
+export const prerender = true;
+
 const title = `${sponsor.title} | ${profile.site_title}`;
 const description = sponsor.subtitle;
 
@@ -16,7 +19,7 @@ if (!isSponsorEnabled()) {
 ---
 
 <Layout title={title} description={description}>
-  <Navbar client:load />
+  <Navbar client:idle />
   <SponsorContent client:load sponsor={sponsor} />
   <Footer client:visible footerInfo={profile.footer} />
 </Layout>

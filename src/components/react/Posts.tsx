@@ -1,5 +1,5 @@
 import { posts } from "@/data/posts";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Icon } from "@/components/ui/icon";
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 import { Button } from "@/components/ui/button";
 
@@ -41,7 +41,7 @@ export default function Posts() {
                     {post.summary}
                   </p>
                 </div>
-                <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="h-4 w-4 text-text-muted group-hover:text-gold transition-colors duration-200 mt-1 shrink-0" />
+                <Icon icon={faArrowUpRightFromSquare} className="h-4 w-4 text-text-muted group-hover:text-gold transition-colors duration-200 mt-1 shrink-0" />
               </div>
             </a>
           ))}

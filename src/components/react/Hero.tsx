@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import { Icon, type FaIcon } from "@/components/ui/icon";
 import {
   faGithub,
   faTwitter,
@@ -56,7 +55,7 @@ interface Social {
 }
 
 // 社交图标注册表 — 配置里填的 icon 名（小写）对应到这里的 Font Awesome 图标
-const socialIconMap: Record<string, IconDefinition> = {
+const socialIconMap: Record<string, FaIcon> = {
   github: faGithub,
   twitter: faTwitter,
   x: faXTwitter,
@@ -370,7 +369,7 @@ export default function Hero({
                       }}
                     />
                   ) : (
-                    <FontAwesomeIcon icon={IconComp} className="h-5! w-5!" />
+                    <Icon icon={IconComp} className="h-5! w-5!" />
                   ))}
                 <span>{social.name}</span>
               </a>
@@ -391,7 +390,7 @@ export default function Hero({
           }`}
         >
           <div className="animate-bounce">
-            <FontAwesomeIcon
+            <Icon
               icon={faChevronDown}
               className="h-4 w-4 text-text-muted/50"
             />

@@ -1,5 +1,5 @@
 import { timelineItems } from "@/data/timeline";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Icon } from "@/components/ui/icon";
 import { faBriefcase, faGraduationCap } from "@fortawesome/free-solid-svg-icons";
 
 export default function Timeline() {
@@ -53,9 +53,9 @@ export default function Timeline() {
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {item.type === "work" ? (
-                        <FontAwesomeIcon icon={faBriefcase} className="h-3.5 w-3.5 text-gold" />
+                        <Icon icon={faBriefcase} className="h-3.5 w-3.5 text-gold" />
                       ) : (
-                        <FontAwesomeIcon icon={faGraduationCap} className="h-3.5 w-3.5 text-text-muted" />
+                        <Icon icon={faGraduationCap} className="h-3.5 w-3.5 text-text-muted" />
                       )}
                       <span className="text-xs text-text-muted font-mono">
                         {item.date}

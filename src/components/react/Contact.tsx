@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { profile } from "@/data/profile";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Icon } from "@/components/ui/icon";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import { faEnvelope, faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 
@@ -49,7 +49,7 @@ export default function Contact() {
                 >
                   <div className="w-10 h-10 rounded-lg border border-border-default bg-bg-card flex items-center justify-center group-hover:border-gold/30 group-hover:bg-gold/[0.05] transition-all duration-200">
                     {social.icon === "github" && (
-                      <FontAwesomeIcon icon={faGithub} className="h-4 w-4 text-text-secondary group-hover:text-gold transition-colors" />
+                      <Icon icon={faGithub} className="h-4 w-4 text-text-secondary group-hover:text-gold transition-colors" />
                     )}
                     {social.icon === "twitter" && (
                       <svg
@@ -70,7 +70,7 @@ export default function Contact() {
                       </svg>
                     )}
                     {social.icon === "mail" && (
-                      <FontAwesomeIcon icon={faEnvelope} className="h-4 w-4 text-text-secondary group-hover:text-gold transition-colors" />
+                      <Icon icon={faEnvelope} className="h-4 w-4 text-text-secondary group-hover:text-gold transition-colors" />
                     )}
                   </div>
                   <div>
@@ -115,7 +115,7 @@ export default function Contact() {
               ) : (
                 <>
                   Send Message
-                  <FontAwesomeIcon icon={faPaperPlane} className="ml-2 h-4 w-4" />
+                  <Icon icon={faPaperPlane} className="ml-2 h-4 w-4" />
                 </>
               )}
             </Button>

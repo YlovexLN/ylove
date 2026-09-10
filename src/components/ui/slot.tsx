@@ -4,7 +4,9 @@ interface SlotProps extends React.HTMLAttributes<HTMLElement> {
   children?: React.ReactNode;
 }
 
-const Slot = React.forwardRef<HTMLElement, SlotProps>(
+// ref 用宽松类型：Slot 本身只是把属性和 ref 透传给子元素，
+// 各调用方的元素类型不同（button/input/a...），具体类型由外层组件声明
+const Slot = React.forwardRef<any, SlotProps>(
 
   (props, ref) => {
     const { children, ...slotProps } = props;
