@@ -255,7 +255,7 @@ export default function Hero({
         >
           <div className="relative inline-block">
             {/* B站风格 Live Ani */}
-            <div className={isLive ? "live-ani" : ""}>
+            <div className={isLive ? "relative inline-block" : ""}>
               {/* Avatar */}
               <div className="relative w-36 h-36 mx-auto">
                 {isLive && (
@@ -297,12 +297,16 @@ export default function Hero({
                     href={`https://live.bilibili.com/${liveRoom || bilibiliUid}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="living-tips"
+                    className="absolute bottom-0.75 left-1/2 flex -translate-x-1/2 items-center gap-0.5 rounded-2xl border-[1.5px] border-white bg-[#ff6699] px-1.5 py-0.5 whitespace-nowrap no-underline"
                   >
-                    <div className="b-img">
-                      <img src={liveGifUrl} alt="" className="b-img__inner" />
-                    </div>
-                    <div className="living-text">直播中</div>
+                    <img
+                      src={liveGifUrl}
+                      alt=""
+                      className="block h-2.5 w-2.5 min-w-3.5"
+                    />
+                    <span className="text-[10px] leading-3.5 font-bold tracking-[0.09em] text-white">
+                      直播中
+                    </span>
                   </a>
                 )}
               </div>
@@ -312,7 +316,7 @@ export default function Hero({
 
         {/* Name */}
         <h1
-          className={`text-5xl md:text-7xl font-display font-hero-weight mb-4 transition-all duration-1000 delay-200 ${
+          className={`text-5xl md:text-7xl font-display font-bold mb-4 transition-all duration-1000 delay-200 ${
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
@@ -349,7 +353,7 @@ export default function Hero({
                 href={social.url}
                 target={isInternal ? undefined : "_blank"}
                 rel={isInternal ? undefined : "noopener noreferrer"}
-                className="inline-flex items-center gap-2 rounded-full border border-border-default bg-bg-card px-3 py-2 text-sm text-text-secondary transition-all duration-200 hover:border-gold/30 hover:bg-bg-card-hover hover:text-gold"
+                className="inline-flex items-center gap-2 rounded-full border border-border-default bg-bg-card px-3 py-2 text-sm text-text-secondary transition-all duration-200 hover:-translate-y-0.5 hover:border-gold/40 hover:bg-bg-card-hover hover:text-gold hover:shadow-[0_10px_24px_-10px_rgba(0,0,0,0.5),0_0_0_1px_rgba(52,211,153,0.1)]"
                 aria-label={social.name}
               >
                 {showSocialIcons &&
@@ -382,7 +386,8 @@ export default function Hero({
       {mode === "scroll" && (
         <button
           onClick={() => {
-            const next = document.querySelector(".scroll-section");
+            // 主页首个模块（各 section 自带 scroll-mt-20，避开固定导航）
+            const next = document.querySelector("main section");
             next?.scrollIntoView({ behavior: "smooth" });
           }}
           className={`absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 cursor-pointer transition-all duration-1000 ${

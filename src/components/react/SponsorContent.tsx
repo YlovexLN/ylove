@@ -105,7 +105,7 @@ export default function SponsorContent({ sponsor }: SponsorContentProps) {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4 py-24">
-      <h1 className="mb-3 text-center font-display font-hero-weight text-3xl md:text-4xl">
+      <h1 className="mb-3 text-center font-display font-bold text-3xl md:text-4xl">
         {sponsor.title}
       </h1>
       <p className="mb-10 whitespace-pre-line text-center text-text-secondary">

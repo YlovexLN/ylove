@@ -89,9 +89,9 @@ if (contentSource === "markdown") {
       isScroll && (
         <>
           {mod.profile && (
-          <section id="profile" class="scroll-section min-h-screen flex items-center justify-center px-4">
+          <section id="profile" class="scroll-mt-20 min-h-screen flex items-center justify-center px-4">
             <div class="max-w-3xl mx-auto text-center">
-              <h2 class="text-4xl md:text-5xl font-display font-hero-weight mb-6">Profile</h2>
+              <h2 class="text-4xl md:text-5xl font-display font-bold mb-6">Profile</h2>
               <p class="text-text-secondary text-lg leading-relaxed">
                 内容待配置
               </p>
@@ -100,9 +100,9 @@ if (contentSource === "markdown") {
           )}
 
           {mod.works && workCards.length > 0 && (
-          <section id="works" class="scroll-section min-h-screen flex items-center justify-center px-4 py-20">
+          <section id="works" class="scroll-mt-20 min-h-screen flex items-center justify-center px-4 py-20">
             <div class="max-w-6xl mx-auto w-full">
-              <h2 class="text-4xl md:text-5xl font-display font-hero-weight mb-8 text-center">Works</h2>
+              <h2 class="text-4xl md:text-5xl font-display font-bold mb-8 text-center">Works</h2>
               <WorkCards
                 client:visible
                 initialWorks={workCards}
@@ -113,9 +113,9 @@ if (contentSource === "markdown") {
           )}
 
           {mod.posts && posts.length > 0 && (
-          <section id="posts" class="scroll-section min-h-screen flex items-center justify-center px-4 py-20">
+          <section id="posts" class="scroll-mt-20 min-h-screen flex items-center justify-center px-4 py-20">
             <div class="max-w-3xl mx-auto text-center">
-              <h2 class="text-4xl md:text-5xl font-display font-hero-weight mb-8">Posts</h2>
+              <h2 class="text-4xl md:text-5xl font-display font-bold mb-8">Posts</h2>
               <div class="grid gap-6 text-left">
                 {posts.map((post) => (
                   <a
@@ -125,7 +125,7 @@ if (contentSource === "markdown") {
                     class="block p-6 rounded-xl bg-bg-card hover:bg-bg-card-hover transition-colors duration-200"
                   >
                     <span class="text-xs text-text-muted font-mono">{post.date}</span>
-                    <h3 class="text-xl font-display font-hero-weight mb-2">{post.title}</h3>
+                    <h3 class="text-xl font-display font-bold mb-2">{post.title}</h3>
                     <p class="text-text-secondary mb-3">{post.summary}</p>
                   </a>
                 ))}
@@ -135,9 +135,9 @@ if (contentSource === "markdown") {
           )}
 
           {mod.repository && (
-          <section id="repository" class="scroll-section min-h-screen flex items-center justify-center px-4 py-20">
+          <section id="repository" class="scroll-mt-20 min-h-screen flex items-center justify-center px-4 py-20">
             <div class="max-w-3xl mx-auto text-center">
-              <h2 class="text-4xl md:text-5xl font-display font-hero-weight mb-6">Repository</h2>
+              <h2 class="text-4xl md:text-5xl font-display font-bold mb-6">Repository</h2>
               <p class="text-text-secondary text-lg leading-relaxed">
                 内容待配置
               </p>
@@ -146,9 +146,9 @@ if (contentSource === "markdown") {
           )}
 
           {mod.contact && (
-          <section id="contact" class="scroll-section min-h-screen flex items-center justify-center px-4 py-20">
+          <section id="contact" class="scroll-mt-20 min-h-screen flex items-center justify-center px-4 py-20">
             <div class="max-w-3xl mx-auto text-center">
-              <h2 class="text-4xl md:text-5xl font-display font-hero-weight mb-6">Contact</h2>
+              <h2 class="text-4xl md:text-5xl font-display font-bold mb-6">Contact</h2>
               <p class="text-text-secondary text-lg leading-relaxed">
                 内容待配置
               </p>

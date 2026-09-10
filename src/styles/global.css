@@ -22,114 +22,23 @@
 
   --font-sans: "寒蝉全圆体", system-ui, sans-serif;
   --font-display: "寒蝉全圆体", system-ui, sans-serif;
-
-  --animate-fade-in: fade-in 0.6s ease-out forwards;
-  --animate-slide-up: slide-up 0.6s ease-out forwards;
-  --animate-float: float 6s ease-in-out infinite;
-  --animate-glow: glow 3s ease-in-out infinite alternate;
-  --animate-typewriter: typewriter 0.05s steps(1) forwards;
 }
 
-/* ─── Minimal Theme (default) ─── */
-:root {
-  --font-sans: "寒蝉全圆体", system-ui, sans-serif;
-  --font-display: "寒蝉全圆体", system-ui, sans-serif;
-  --color-bg-primary: #000000;
-  --color-bg-secondary: #0a0a0a;
-  --color-bg-card: #111111;
-  --color-bg-card-hover: #1a1a1a;
-  --color-border-default: #1f1f1f;
-  --color-border-hover: #333333;
-  --color-text-primary: #f5f5f5;
-  --color-text-secondary: #a0a0a0;
-  --color-text-muted: #666666;
-  --color-gold: #34d399;
-  --color-gold-light: #6ee7b7;
-  --color-gold-dark: #059669;
-  --color-accent: #34d399;
-  --color-accent-hover: #6ee7b7;
-}
-
-/* ─── Hero 名称字重 ─── */
-.font-hero-weight { font-weight: 700; }
+/* 说明：主题变量只在 @theme 中定义一次（Tailwind 会自动输出为 :root 上的 CSS 变量，
+   无需手写 :root 副本）；组件样式一律用工具类表达，此文件内不再添加自定义类。 */
 
 /* ─── Animations ─── */
 
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
+/* 组件通过 style={{ animation: "slide-up ..." }} 直接引用，故保留 */
 @keyframes slide-up {
   from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-}
-
-@keyframes glow {
-  from { box-shadow: 0 0 12px rgba(52, 211, 153, 0.1); }
-  to { box-shadow: 0 0 24px rgba(52, 211, 153, 0.25); }
-}
-
-@keyframes spin-gradient {
-  to { transform: rotate(360deg); }
-}
-
-/* ─── B站 Live Ani ─── */
-.live-ani { position: relative; display: inline-block; }
-
-.living-tips {
-  position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
-  display: flex; align-items: center; gap: 2px;
-  background: #ff6699; border-radius: 16px; border: 1.5px solid #ffffff;
-  padding: 2px 6px; white-space: nowrap; text-decoration: none;
-}
-
-.living-tips .b-img img { width: 10px; height: 10px; display: block; min-width: 14px; }
-
-.living-text {
-  font-size: 10px; font-weight: 700; color: #ffffff;
-  line-height: 14px; letter-spacing: 0.09em;
-}
-
-.live-ring-fixed {
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  border-radius: 50%; border: 2px solid rgba(255, 102, 153, 0.7);
-  pointer-events: none; box-sizing: border-box;
-}
-
-/* ─── Base Styles ─── */
-
-html { scroll-behavior: smooth; }
-
-/* 滚动模块 — 避开固定导航 */
-.scroll-section {
-  scroll-margin-top: 80px;
-}
-
-body {
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+/* ─── 全局细节（无法用工具类表达的部分）─── */
 
 ::selection { background-color: rgba(52, 211, 153, 0.3); color: #ffffff; }
 
-/* ─── MiniMal 社交按钮悬停 — 上浮 + 阴影 + 翡翠绿边框 ─── */
-main a.inline-flex.rounded-full.bg-bg-card:hover {
-  border-color: rgba(52, 211, 153, 0.4) !important;
-  background: rgba(26, 26, 26, 0.98) !important;
-  transform: translateY(-2px);
-  box-shadow:
-    0 10px 24px -10px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(52, 211, 153, 0.1);
-}
 
 /* ─── Scrollbar (通用) ─── */
 
@@ -137,16 +46,3 @@ main a.inline-flex.rounded-full.bg-bg-card:hover {
 ::-webkit-scrollbar-track { background: #000000; }
 ::-webkit-scrollbar-thumb { background: #333333; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #555555; }
-
-/* ─── Utility Classes ─── */
-
-.gradient-gold {
-  color: var(--color-gold);
-}
-
-.gradient-gold-bg { background: var(--color-gold); }
-
-.card-glow:hover { animation: glow 3s ease-in-out infinite alternate; }
-
-.section-hidden { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
-.section-visible { opacity: 1; transform: translateY(0); }

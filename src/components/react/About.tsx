@@ -46,7 +46,7 @@ export default function About() {
               >
                 <div className="flex items-center justify-between">
                   <span className="text-text-secondary text-sm">{stat.label}</span>
-                  <span className="text-3xl font-display gradient-gold">
+                  <span className="text-3xl font-display text-gold">
                     {stat.value}
                   </span>
                 </div>
