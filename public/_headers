@@ -1,0 +1,19 @@
+# 静态资源缓存策略
+# Netlify 与 Cloudflare Workers 静态资源都会读取本文件（ESA 需在控制台配置）。
+# 页面本身为 SSR 动态渲染，不在此缓存。
+
+# Astro 构建产物带内容 hash，可长期强缓存
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# 子集字体文件名固定，重新生成字体后需能刷新，故 30 天
+/fonts/*
+  Cache-Control: public, max-age=2592000
+
+# 图片等其它静态资源
+/avatars/*
+  Cache-Control: public, max-age=604800
+/works/*
+  Cache-Control: public, max-age=604800
+/icon/*
+  Cache-Control: public, max-age=604800
