@@ -21,11 +21,14 @@ const IMG_HTML_RE = /<\s*img\b[^>]*\bsrc\s*=\s*["']?([^"'\s>]+)["']?[^>]*>/gi;
 /**
  * 图片地址规范化：
  * - `data:`、`http(s):`、`/` 开头的绝对路径直接使用；
- * - 其余相对路径（如粘贴产生的 `./xxx.png`）统一按 public/works/ 目录解析。
+ * - 其余相对路径（如粘贴产生的 `./xxx.png`）统一按 public/works/ 目录解析；
+ * - 不像文件名的值（如文档示例里的 `...`）返回 undefined，避免生成 404 的坏封面。
  */
-function normalizeImageSrc(src: string): string {
+function normalizeImageSrc(src: string): string | undefined {
   const trimmed = src.trim();
+  if (!trimmed) return undefined;
   if (/^(data:|https?:|\/)/i.test(trimmed)) return trimmed;
+  if (!/\.\w{2,5}$/.test(trimmed)) return undefined;
   return `/works/${trimmed.replace(/^\.\//, "")}`;
 }
 

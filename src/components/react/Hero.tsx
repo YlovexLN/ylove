@@ -144,11 +144,32 @@ export default function Hero({
   //    加载成功（onLoad）后才淡入覆盖静态底座。代理慢/失败/被风控都不再阻塞 Hero 首屏。
   const staticAvatar = avatar || "/avatars/avatar.jpg";
   const [avatarReady, setAvatarReady] = useState(false); // 动态真实头像是否已成功加载
+  const dynamicAvatarRef = useRef<HTMLImageElement>(null);
   // 动态头像走服务端代理（SSR → src/pages/api/bili-api.ts；ESA → esa/functions/bili-api.ts）
   const dynamicAvatarSrc = bilibiliUid
     ? `/api/bili-api?action=avatar&uid=${bilibiliUid}`
     : "";
   const typeRef = useRef({ i: 0, deleting: false });
+
+  // 动态头像加载状态兜底：动态头像随 SSR HTML 就已开始下载，水合时往往已经加载完成，
+  // 那样 onLoad 永远不会触发（React 会为 <img> 补发 load 事件，Preact 不会），
+  // 所以这里主动检查 complete，避免真实头像一直停在 opacity-0。
+  useEffect(() => {
+    const img = dynamicAvatarRef.current;
+    if (!img) return;
+    if (img.complete) {
+      setAvatarReady(img.naturalWidth > 0);
+      return;
+    }
+    const handleLoad = () => setAvatarReady(true);
+    const handleError = () => setAvatarReady(false);
+    img.addEventListener("load", handleLoad);
+    img.addEventListener("error", handleError);
+    return () => {
+      img.removeEventListener("load", handleLoad);
+      img.removeEventListener("error", handleError);
+    };
+  }, [dynamicAvatarSrc]);
 
   // 打字机效果
   useEffect(() => {
@@ -277,13 +298,13 @@ export default function Hero({
                     className="absolute inset-0 w-full h-full object-cover"
                     decoding="async"
                   />
-                  {/* 动态真实头像：后台异步加载，成功后淡入覆盖静态底座；失败则静态底座保持可见 */}
+                  {/* 动态真实头像：后台异步加载，成功后淡入覆盖静态底座；失败则静态底座保持可见。
+                      加载状态统一由上面的 useEffect 处理（含“水合前已加载完成”的情况） */}
                   {dynamicAvatarSrc && (
                     <img
+                      ref={dynamicAvatarRef}
                       src={dynamicAvatarSrc}
                       alt={name}
-                      onLoad={() => setAvatarReady(true)}
-                      onError={() => setAvatarReady(false)}
                       className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
                         avatarReady ? "opacity-100" : "opacity-0"
                       }`}

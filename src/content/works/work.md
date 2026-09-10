@@ -8,7 +8,6 @@
 
 ## 示例项目
 
-<img src="...">
 描述：这是一个示例作品。
 链接：https://example.com
 标签：Astro、React
@@ -28,5 +27,7 @@
 
 描述：验证 GitHub 粘贴图片的 HTML img 格式识别。
 标签：GitHub、Markdown
+链接：https://example.com/image-test
+<img src="https://qiniu.ylovexln.top/images/62423081_p0.png">
 
 这条记录的封面应识别为 GitHub 外链图片。
