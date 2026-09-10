@@ -22,10 +22,10 @@ export default function Contact() {
         {/* Section Header */}
         <div className="mb-16">
           <span className="text-gold text-sm font-mono tracking-widest uppercase">
-            / Contact
+            / 联系
           </span>
           <h2 className="text-3xl md:text-4xl font-display mt-2">
-            Let&apos;s Connect
+            联系我
           </h2>
           <div className="w-12 h-0.5 bg-gold/50 mt-4 section-divider" />
         </div>
@@ -34,8 +34,7 @@ export default function Contact() {
           {/* Left: Social Info */}
           <div className="space-y-8">
             <p className="text-text-secondary leading-relaxed">
-              Have a project in mind or just want to say hi? I&apos;m always
-              open to new opportunities and interesting conversations.
+              有项目想聊，或者只是想打个招呼？我随时欢迎新的合作机会和有趣的交流。
             </p>
 
             <div className="space-y-4">
@@ -47,7 +46,7 @@ export default function Contact() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 group"
                 >
-                  <div className="w-10 h-10 rounded-lg border border-border-default bg-bg-card flex items-center justify-center group-hover:border-gold/30 group-hover:bg-gold/[0.05] transition-all duration-200">
+                  <div className="w-10 h-10 rounded-lg border border-border-default bg-bg-card flex items-center justify-center group-hover:border-gold/30 group-hover:bg-gold/5 transition-all duration-200">
                     {social.icon === "github" && (
                       <Icon icon={faGithub} className="h-4 w-4 text-text-secondary group-hover:text-gold transition-colors" />
                     )}
@@ -93,28 +92,28 @@ export default function Contact() {
           >
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-text-primary mb-1.5">
-                Name
+                姓名
               </label>
-              <Input id="name" placeholder="Your name" required />
+              <Input id="name" placeholder="你的称呼" required />
             </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-1.5">
-                Email
+                邮箱
               </label>
-              <Input id="email" type="email" placeholder="your@email.com" required />
+              <Input id="email" type="email" placeholder="你的邮箱地址" required />
             </div>
             <div>
               <label htmlFor="message" className="block text-sm font-medium text-text-primary mb-1.5">
-                Message
+                留言
               </label>
-              <Textarea id="message" placeholder="What's on your mind?" required />
+              <Textarea id="message" placeholder="想聊点什么？" required />
             </div>
             <Button type="submit" variant="gold" className="w-full">
               {submitted ? (
-                "Message Sent! ✓"
+                "已发送 ✓"
               ) : (
                 <>
-                  Send Message
+                  发送消息
                   <Icon icon={faPaperPlane} className="ml-2 h-4 w-4" />
                 </>
               )}
