@@ -139,14 +139,16 @@ export default function Hero({
   const [liveRoom, setLiveRoom] = useState("");
   const [showScrollHint, setShowScrollHint] = useState(true);
   const pulseProgress = useLivePulse(isLive);
-  const staticAvatar = avatar;
-  const [avatarSrc, setAvatarSrc] = useState(
-    bilibiliUid ? `/api/bili-api?action=avatar&uid=${bilibiliUid}` : staticAvatar || ""
-  );
-  // B站头像代理失败（如部署到 Cloudflare Workers 被风控）时回退到内置静态头像，避免空白/裂图
-  const handleAvatarError = () => {
-    if (staticAvatar && avatarSrc !== staticAvatar) setAvatarSrc(staticAvatar);
-  };
+  // 头像分层加载优化（解决 Netlify 等海外 serverless 上 Hero 首屏慢的问题）：
+  //  - 静态兜底头像 /avatars/avatar.jpg 作为底座随 HTML 直接输出，走平台 CDN 静态资源，秒开；
+  //  - 动态真实头像经服务端代理 /api/bili-api?action=avatar 异步后台加载（Referer/UA 可控），
+  //    加载成功（onLoad）后才淡入覆盖静态底座。代理慢/失败/被风控都不再阻塞 Hero 首屏。
+  const staticAvatar = avatar || "/avatars/avatar.jpg";
+  const [avatarReady, setAvatarReady] = useState(false); // 动态真实头像是否已成功加载
+  // 动态头像走服务端代理（SSR → src/pages/api/bili-api.ts；ESA → esa/functions/bili-api.ts）
+  const dynamicAvatarSrc = bilibiliUid
+    ? `/api/bili-api?action=avatar&uid=${bilibiliUid}`
+    : "";
   const typeRef = useRef({ i: 0, deleting: false });
 
   // 打字机效果
@@ -185,15 +187,18 @@ export default function Hero({
     return () => clearTimeout(timer);
   }, [titleIndex, displayText, isDeleting, heroTitles]);
 
-  // 客户端定时检测直播状态
+  // 客户端定时检测直播状态 —— 走本站服务端代理 /api/bili-api（Referer 可控，5 分钟缓存限频）
   useEffect(() => {
     if (!bilibiliUid) return;
 
+    let alive = true;
     const checkLive = async () => {
       try {
         const params = new URLSearchParams({ uid: String(bilibiliUid) });
         const res = await fetch(`/api/bili-api?${params}`);
+        if (!res.ok) return;
         const json = await res.json();
+        if (!alive) return;
         setIsLive(json.live);
         if (json.roomId) setLiveRoom(json.roomId);
       } catch {
@@ -203,7 +208,10 @@ export default function Hero({
 
     checkLive();
     const interval = setInterval(checkLive, 300000);
-    return () => clearInterval(interval);
+    return () => {
+      alive = false;
+      clearInterval(interval);
+    };
   }, [bilibiliUid]);
 
   useEffect(() => {
@@ -258,20 +266,32 @@ export default function Hero({
                     <div style={getRingStyle(pulseProgress, 0.67)} />
                   </>
                 )}
-                {avatarSrc && (
                 <div
-                  className={`w-full h-full rounded-full overflow-hidden ring-2 ${
+                  className={`relative w-full h-full rounded-full overflow-hidden ring-2 ${
                     isLive ? "ring-[rgba(255,102,153,0.9)]" : "ring-gold/30"
                   }`}
                 >
+                  {/* 底座：静态兜底头像，随 HTML 秒开，不依赖动态代理 */}
                   <img
-                    src={avatarSrc}
+                    src={staticAvatar}
                     alt={name}
-                    className="w-full h-full object-cover"
-                    onError={handleAvatarError}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    decoding="async"
                   />
+                  {/* 动态真实头像：后台异步加载，成功后淡入覆盖静态底座；失败则静态底座保持可见 */}
+                  {dynamicAvatarSrc && (
+                    <img
+                      src={dynamicAvatarSrc}
+                      alt={name}
+                      onLoad={() => setAvatarReady(true)}
+                      onError={() => setAvatarReady(false)}
+                      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+                        avatarReady ? "opacity-100" : "opacity-0"
+                      }`}
+                      decoding="async"
+                    />
+                  )}
                 </div>
-                )}
                 {/* Live badge - 直播中 */}
                 {isLive && liveGifUrl && (
                   <a

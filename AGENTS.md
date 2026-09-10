@@ -3,7 +3,7 @@
 YLOVEXLN 个人主页：**Astro 7 + React 19 + TailwindCSS 4 + Font Awesome 7 + TypeScript** 静态站点，SSR 多目标部署。
 
 - **主题**：单一 MiniMal 极简风格（纯黑背景 + 翡翠绿强调），**无主题切换**
-- **字体**：自托管 ChillRoundF（寒蝉全圆体，字重 400/700，`public/fonts/*.ttf`），不使用 Google Fonts CDN
+- **字体**：寒蝉全圆体 (ChillRoundF)，经 CDN `fontsapi.zeoseven.com` 分片按需加载，同时引入 `main`(字重 400) 与 `bold`(字重 700) 以提供真实加粗，不使用 Google Fonts CDN
 - **配置**：`config.toml` 经 `smol-toml` 解析，支持构建环境变量覆盖
 - **内容源**：`markdown`（`src/content/` 预写）或 `strapi`（构建时从 CMS 拉取）
 
@@ -42,13 +42,13 @@ src/
 │   └── ui/         # shadcn/ui 基础组件（Button、Input、Badge、Card 等）
 ├── content/        # Markdown 内容（posts / works）
 ├── data/           # 数据文件 + config.toml 解析（profile、sponsor、timeline 等）
-├── layouts/        # Layout.astro（全局布局与字体预加载）
+├── layouts/        # Layout.astro（全局布局）
 ├── lib/            # 工具库（strapi 客户端、work 解析）
 ├── pages/          # 页面路由 + API
 │   ├── index.astro       # 主页（scroll 模式多模块）
 │   ├── sponsor.astro     # 赞助页（受总开关控制）
 │   └── api/bili-api.ts   # B站 API 代理（头像 / 直播状态）
-└── styles/         # global.css + 字体样式
+└── styles/         # global.css
 ```
 
 ## 配置与数据

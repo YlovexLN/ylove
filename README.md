@@ -6,7 +6,7 @@
 
 - 🎨 **极简主题** — 纯黑极简风格，翡翠绿强调
 - ⌨️ **Hero 打字机标题** — 多标题轮播，速度可调
-- 🐾 **B站集成** — 头像自动获取、直播状态实时检测（`/api/bili-api`）
+- 🐾 **B站集成** — 头像自动获取、直播状态实时检测；经本站服务端 `/api/bili-api` 代理（携带 buvid3 cookie 规避数据中心 IP 风控、Referer/UA 可控、带缓存），SSR 走 Astro API 路由、纯静态部署走 ESA 边缘函数兜底，头像失败回退内置静态头像不裂图
 - 🔗 **社交链接** — 支持 Font Awesome 图标 / 自定义 SVG Logo，可一键关闭图标
 - 📄 **双数据源** — `markdown`（本地预写内容）或 `strapi`（构建时拉取 CMS）
 - 📦 **模块化页面** — Works / Posts / Profile / Repository / Contact 按需开关
@@ -27,7 +27,7 @@
 
 ```text
 /
-├── public/              # 静态资源（头像、字体、作品图）
+├── public/              # 静态资源（头像、作品图、favicon）
 ├── src/
 │   ├── components/
 │   │   ├── react/       # React 交互组件（Hero、Navbar、Footer 等）
@@ -38,7 +38,7 @@
 │   ├── lib/             # 工具库（Strapi 客户端、作品解析）
 │   ├── pages/           # 页面路由
 │   │   └── api/         # 服务端 API（B站代理等）
-│   ├── styles/          # 全局样式与字体
+│   ├── styles/          # 全局样式
 │   └── utils/           # 工具函数
 ├── config.toml          # ⚙️ 站点配置（修改此处更新页面内容）
 ├── config.example.toml  # 配置模板
@@ -68,7 +68,9 @@ pnpm preview     # 本地预览构建结果
 
 ## ☁️ 部署
 
-本项目为 SSR 模式（含 `/api/bili-api` 运行时接口），可直接部署到 **Cloudflare Workers**、**Netlify** 或 **腾讯云 EdgeOne**。
+本项目为 SSR 模式（含 `/api/bili-api` 运行时接口），可直接部署到 **Cloudflare Workers**、**Netlify** 或 **腾讯云 EdgeOne**。B站头像与直播检测统一走本站 `/api/bili-api` **服务端代理**：服务端先向 B站首页发起一次握手，获取 B站下发给任意匿名访客的 `buvid3` cookie，再携带该 cookie + 完整浏览器 UA + 匹配 Referer 请求 B站接口，有效规避数据中心出口 IP 被风控（-352/-412）。SSR 部署命中 `src/pages/api/bili-api.ts`，ESA 纯静态部署命中 `esa/functions/bili-api.ts` 边缘函数。头像直接取自 `x/web-interface/card` 的 `data.card.face` 再代理回源，另有内置静态头像兜底（失败 onError 回退不裂图）、1 小时缓存；直播状态（card 接口不含 live 信息）单独经直播间接口查询，带 5 分钟缓存限频。
+
+> ⚠️ 请勿改回「浏览器 JSONP 直连 B站」：`<script>` 跨域加载时 `Referer` 是本站域名，B站对陌生第三方 Referer + `jsonp callback` 的风控会直接返回 **403**。
 
 > 💡 无需修改 `astro.config.mjs`：构建时通过环境变量 `DEPLOY_TARGET`（`cloudflare` / `netlify` / `node`，`edgeone` 待官方适配 Astro 7）自动选择适配器，对应脚本见下方。
 

@@ -1,56 +1,81 @@
 // @ts-check
-/// <reference types="node" />
 /**
- * ESA 边缘函数入口 — 替代 SSR 版 /api/bili-api（头像代理 + 直播状态检测）
+ * ESA 边缘函数 — 替代 SSR 版 /api/bili-api（头像代理 + 直播间状态检测）
  *
- * 部署模型：函数 + Pages 混合项目（配置见根目录 esa.jsonc）
- *  - entry：本文件，处理未命中静态资源的请求
- *  - assets.directory：./dist，静态页面托管
- * 路由：静态资源优先 → 未命中再执行本函数（参见 ESA 文档「静态资源的路由」）
- *
- * 注意：ER 运行时为 Web Worker API 风格（fetch / Request / Response），
- * 无 Node.js 的 Buffer / process，因此头像响应改用 Response 直接接收 body 流，
- * 其余逻辑与 src/pages/api/bili-api.ts 保持一致。
+ * ER 运行时为 Web Worker 风格（fetch/Request/Response），无 Node Buffer/process，
+ * 头像响应用 Response 直接接收 body 流。与 src/pages/api/bili-api.ts 逻辑保持一致。
  */
-const BILI_HEADERS = {
-  "User-Agent": "Mozilla/5.0",
-  Referer: "https://space.bilibili.com/",
-};
+const UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
 
+let buvidCookie = "";
 let cachedFace = "";
 let cachedUid = "";
 
+async function getBuvidCookie(): Promise<string> {
+  if (buvidCookie) return buvidCookie;
+  try {
+    const home = await fetch("https://www.bilibili.com/", {
+      headers: { "User-Agent": UA, "Accept-Language": "zh-CN,zh;q=0.9" },
+    });
+    const gsc = (home.headers as any).getSetCookie;
+    const jar: string[] =
+      typeof gsc === "function"
+        ? gsc.call(home.headers)
+        : home.headers.get("set-cookie")
+          ? [home.headers.get("set-cookie")!]
+          : [];
+    const buvid = jar.find((c) => c.startsWith("buvid3"))?.split(";")[0];
+    if (buvid) buvidCookie = buvid;
+  } catch {
+    /* ignore */
+  }
+  return buvidCookie;
+}
+
+async function buildHeaders(referer: string): Promise<Record<string, string>> {
+  const cookie = await getBuvidCookie();
+  return {
+    "User-Agent": UA,
+    Referer: referer,
+    "Accept-Language": "zh-CN,zh;q=0.9",
+    ...(cookie ? { Cookie: cookie } : {}),
+  };
+}
+
+async function parseBiliJson(res: Response): Promise<any | null> {
+  try {
+    return JSON.parse(await res.text());
+  } catch {
+    return null;
+  }
+}
+
+// 头像：仅走 x/web-interface/card 取 data.card.face
 async function getFaceUrl(uid: string): Promise<string> {
   if (cachedUid === uid && cachedFace) return cachedFace;
-  try {
-    const res = await fetch(
-      `https://api.bilibili.com/x/web-interface/card?mid=${uid}`,
-      { headers: BILI_HEADERS }
+  for (let i = 0; i < 2; i++) {
+    const headers = await buildHeaders("https://space.bilibili.com/");
+    const json = await parseBiliJson(
+      await fetch(`https://api.bilibili.com/x/web-interface/card?mid=${uid}`, { headers })
     );
-    const json: any = await res.json();
-    const face = json.code === 0 ? json.data?.card?.face || "" : "";
+    const face = json?.code === 0 ? json.data?.card?.face || "" : "";
     if (face) {
       cachedFace = face;
       cachedUid = uid;
+      return face;
     }
-    return face;
-  } catch {
-    return "";
   }
+  return "";
 }
 
 export default {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
-
-    // 仅处理 /api/bili-api，其余未命中静态资源的请求统一 404
     if (!url.pathname.startsWith("/api/bili-api")) {
       return new Response("Not Found", { status: 404 });
     }
-
-    const action = url.searchParams.get("action");
     const uid = url.searchParams.get("uid");
-
     if (!uid) {
       return new Response(JSON.stringify({ live: false }), {
         status: 400,
@@ -58,43 +83,42 @@ export default {
       });
     }
 
-    // 头像代理
-    if (action === "avatar") {
+    // 头像代理：成功返回图片字节，失败 404 交由前端回退 config.toml avatar 兜底
+    if (url.searchParams.get("action") === "avatar") {
       const faceUrl = await getFaceUrl(uid);
-      if (!faceUrl) return new Response("", { status: 500 });
-      try {
-        const imgRes = await fetch(faceUrl, { headers: BILI_HEADERS });
-        return new Response(imgRes.body, {
-          status: 200,
-          headers: {
-            "Content-Type": imgRes.headers.get("content-type") || "image/jpeg",
-            "Cache-Control": "public, max-age=3600",
-          },
-        });
-      } catch {
-        return new Response("", { status: 500 });
+      if (faceUrl) {
+        const headers = await buildHeaders("https://space.bilibili.com/");
+        const imgRes = await fetch(faceUrl, { headers });
+        if (imgRes.ok) {
+          return new Response(imgRes.body, {
+            status: 200,
+            headers: {
+              "Content-Type": imgRes.headers.get("content-type") || "image/jpeg",
+              "Cache-Control": "public, max-age=3600",
+            },
+          });
+        }
       }
+      return new Response("avatar unavailable", {
+        status: 404,
+        headers: { "Content-Type": "text/plain", "Cache-Control": "no-store" },
+      });
     }
 
-    // 直播状态检测 — 通过 UID 自动查询直播间
+    // 直播状态：card 不含 live 信息，需单独查直播接口
     try {
-      let live = false;
-      let resolvedRoomId = "";
-
-      const roomRes = await fetch(
-        `https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid=${uid}`,
-        { headers: { "User-Agent": "Mozilla/5.0", Referer: "https://live.bilibili.com/" } }
+      const headers = await buildHeaders("https://live.bilibili.com/");
+      const json = await parseBiliJson(
+        await fetch(
+          `https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid=${uid}`,
+          { headers }
+        )
       );
-      const roomJson: any = await roomRes.json();
-      if (roomJson.code === 0 && roomJson.data) {
-        resolvedRoomId = String(roomJson.data.roomid || "");
-        live = roomJson.data.liveStatus === 1;
-      }
-
-      return new Response(JSON.stringify({ live, roomId: resolvedRoomId }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
+      const data = json?.code === 0 ? json.data : null;
+      return new Response(
+        JSON.stringify({ live: data?.liveStatus === 1, roomId: String(data?.roomid || "") }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
     } catch {
       return new Response(JSON.stringify({ live: false, roomId: "" }), {
         status: 500,
