@@ -1,5 +1,4 @@
-@import url("https://fontsapi.zeoseven.com/3/main/result.css");
-@import url("https://fontsapi.zeoseven.com/3/bold/result.css"); /* 真实 700 字重 */
+/* 字体（寒蝉全圆体）由 CDN 提供，见 src/layouts/Layout.astro 的 <link rel="stylesheet"> */
 @import "tailwindcss";
 
 /* ─── Theme Variables ─── */

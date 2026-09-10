@@ -40,9 +40,12 @@ const { title = "YLOVEXLN", description = "YLOVEXLN 的个人主页与作品集"
         }
       })();
     </script>
-    <!-- 预加载字体：避免 font-display:swap 期间先显示浏览器系统字体 -->
-    <link rel="preload" as="font" type="font/ttf" href="/fonts/ChillRoundFRegular.ttf" crossorigin />
-    <link rel="preload" as="font" type="font/ttf" href="/fonts/ChillRoundFBold.ttf" crossorigin />
+    <!-- 字体：寒蝉全圆体（CDN 分片按需加载，字重 400/700）。
+         直接在 head 引入，与主样式表并行请求；若放在 global.css 里用 @import，
+         会形成 HTML → 主 CSS → 字体 CSS → 字体分片 的串行链路，拖慢首屏文字渲染 -->
+    <link rel="preconnect" href="https://fontsapi.zeoseven.com" crossorigin />
+    <link rel="stylesheet" href="https://fontsapi.zeoseven.com/3/main/result.css" />
+    <link rel="stylesheet" href="https://fontsapi.zeoseven.com/3/bold/result.css" />
   </head>
   <body>
     <slot />
