@@ -19,7 +19,7 @@ export default function Timeline() {
 
         <div className="relative">
           {/* Vertical Line */}
-          <div className="absolute left-[19px] top-0 bottom-0 w-px bg-border-default" />
+          <div className="absolute inset-y-0 left-4.75 w-px bg-border-default" />
 
           <div className="space-y-8">
             {timelineItems.map((item, index) => (
