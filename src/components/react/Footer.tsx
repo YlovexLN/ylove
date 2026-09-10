@@ -32,9 +32,13 @@ export default function Footer({ footerInfo }: FooterProps) {
   return (
     <footer className="border-t border-border-default py-6 px-4">
       <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-center text-xs text-text-muted sm:text-sm">
-        <span>&copy; {new Date().getFullYear()} YlovexLN. All rights reserved.</span>
         <span>
-          Powered by <span className="text-gold font-medium">Astro &amp; React</span>
+          &copy; {new Date().getFullYear()} YlovexLN. All rights reserved.
+        </span>
+        <span>
+          Powered by <span className="text-gold font-medium">Astro </span>
+          &amp;
+          <span className="text-gold font-medium"> Preact</span>
         </span>
         {showFooterInfo && (
           <>
