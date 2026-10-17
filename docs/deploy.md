@@ -1,6 +1,6 @@
 # 部署指南
 
-本项目为 **SSR 模式**（含 `/api/bili-api` 运行时接口），支持多目标构建与部署。
+本项目为 **SSR 模式**（页面已 `prerender` 静态化，另含 `/api/bili-api`、`/api/works` 运行时接口），支持多目标构建与部署；**ESA 目标为纯静态构建**，动态接口由边缘函数提供。
 
 ## 多目标构建
 
@@ -11,6 +11,7 @@
 | Node（本地 / 自托管） | `pnpm build` / `pnpm build:node` | `dist/` |
 | Cloudflare Workers | `pnpm build:cloudflare` | `dist/client` + `dist/server` |
 | Netlify | `pnpm build:netlify` | `dist/` + `.netlify/` |
+| 阿里云 ESA（函数和 Pages） | `pnpm build:esa` | `dist/`（静态托管）+ 边缘函数 |
 | 腾讯云 EdgeOne | `pnpm build:edgeone`（待适配 Astro 7） | `.edgeone/` |
 
 ## 部署到 Node.js（自托管 / VPS）
@@ -90,9 +91,27 @@
    - 环境变量（如 `STRAPI_URL`）在 Netlify 项目 `Site configuration → Environment variables` 中配置，修改后重新 Deploy 生效。
    - SSR 函数入口验证：`.netlify/build/entry.mjs` 正确导出 `createHandler`（`function`）。
 
+## 部署到阿里云 ESA（函数和 Pages）
+
+1. **构建**
+
+   ```sh
+   pnpm build:esa
+   ```
+
+   ESA 官方仅支持 Astro 静态生成模式（`output: 'static'`），因此走 `scripts/esa-build.mjs`：构建前把 SSR 端点 `src/pages/api/bili-api.ts` 临时移出（备份到 `node_modules/.esa-backup/`，不污染 git），构建结束后自动恢复；随后以 `DEPLOY_TARGET=esa` 执行 `astro build`。
+
+2. **产物与接口**
+   - `dist/` 作为静态资源目录（`esa.jsonc` 的 `assets.directory`）。
+   - `/api/bili-api` 由边缘函数 `esa/functions/bili-api.ts` 提供（Web Worker API 风格，无 `Buffer` / `process`），入口见 `esa.jsonc` 的 `entry`。
+
+3. **部署**
+   - 推送到 GitHub 后，在 ESA 控制台导入仓库自动构建部署（`esa.jsonc` 的 `buildCommand` 为 `pnpm run build:esa`）。
+   - 构建所需环境变量（`BILIBILI_UID` 等）在控制台「构建信息 → 环境变量」配置，Node 版本选择 ≥ 22。
+
 ## 部署到腾讯云 EdgeOne ⏳（待官方适配 Astro 7）
 
-> **当前状态**：`@edgeone/astro@1.1.5` 仅支持 Astro 5 / 6，**尚未适配 Astro 7**。本项目已升级到 Astro 7，因此 `pnpm build:edgeone` 会失败。等待官方发布支持 Astro 7 的新版本后，移除 `astro.config.mjs` 中 `resolveAdapter()` 的 `edgeone` 分支注释即可恢复。
+> **当前状态**：`@edgeone/astro@1.1.5` 仅支持 Astro 5 / 6，**尚未适配 Astro 7**。本项目已升级到 Astro 7，因此 `pnpm build:edgeone` 会失败。适配器分支已在 `astro.config.mjs` 的 `resolveAdapter()` 中启用，等待官方发布支持 Astro 7 的新版本后升级 `@edgeone/astro` 即可恢复。
 
 - 构建：`pnpm build:edgeone`（当前不可用），产物 `.edgeone/`（`assets/` + `cloud-functions/`）
 - 项目配置：`edgeone.json`

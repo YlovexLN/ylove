@@ -101,6 +101,8 @@ src/
 
 ## 文档
 
+项目文档见 [docs/README.md](docs/README.md)：[产品需求](docs/prd.md)、[技术架构](docs/architecture.md)、[部署指南](docs/deploy.md)。
+
 完整文档：<https://docs.astro.build>
 
 在处理相关任务前，请参考以下指南：
