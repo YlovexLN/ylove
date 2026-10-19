@@ -101,7 +101,7 @@ src/
 
 ## 文档
 
-项目文档见 [docs/README.md](docs/README.md)：[产品需求](docs/prd.md)、[技术架构](docs/architecture.md)、[部署指南](docs/deploy.md)。
+项目上下文见 [`.agents/context/`](.agents/context/)：[产品需求](.agents/context/prd.md)、[技术架构](.agents/context/architecture.md)、[约束与约定](.agents/context/architecture.md#9-约束与约定)；部署与运维见 [docs/](docs/README.md) 的[部署指南](docs/deploy.md)。
 
 完整文档：<https://docs.astro.build>
 

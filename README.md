@@ -194,7 +194,8 @@ EdgeOne Makers 支持连接 GitHub / GitLab / Bitbucket / Gitee 仓库，推送�
 
 ## 📖 相关文档
 
-- [项目文档索引](docs/README.md) — 产品需求 / 技术架构 / 部署指南
+- [项目文档索引](docs/README.md) — 部署指南等运维文档
+- [项目上下文](.agents/context/) — 产品需求 / 技术架构 / 约束与约定
 - [Astro 官方文档](https://docs.astro.build)
 - [Astro 部署到 Cloudflare](https://docs.astro.build/en/guides/deploy/cloudflare/)
 - [Astro 部署到 Netlify](https://docs.astro.build/en/guides/deploy/netlify/)
