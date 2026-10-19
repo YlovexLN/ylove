@@ -1,6 +1,5 @@
-# pnpm 9/10 要求 workspace 清单必须包含 packages 字段（本项目是单包仓库）。
-# 缺少时 Cloudflare Workers Builds 的 `pnpm install --frozen-lockfile` 会报
-# "packages field missing or empty" 并中断构建。
+# 单包仓库也显式声明 packages：pnpm 9/10 把本文件当作 workspace 清单时，
+# 缺少该字段会直接报 `packages field missing or empty`（Cloudflare 构建即栽在这一步）。
 packages:
   - '.'
 
@@ -32,7 +31,8 @@ onlyBuiltDependencies:
   - workerd
 # 修复 CVE-2026-23950：tar@6.1.11（@edgeone/astro 链路 node-pre-gyp）存在任意文件覆盖漏洞，
 # 统一强制到已修复版本（与 @astrojs/netlify 链路的 tar@7.5.22 合并去重）
-# 注意：pnpm 9（Cloudflare Workers Builds 使用的版本）不读本文件的 overrides，
-# 因此 package.json 的 pnpm.overrides 中保留了同样的 tar 覆盖，两处需保持一致。
+# 注意：本文件的 overrides 只被 pnpm 10+ 读取；Cloudflare Workers Builds 需把
+# PNPM_VERSION 设为与本地一致（11.9.0），否则 pnpm 9 会因读不到该覆盖而
+# 在 --frozen-lockfile 阶段报 LOCKFILE_CONFIG_MISMATCH。
 overrides:
   tar: 7.5.22

@@ -43,9 +43,5 @@
     "cross-env": "^10.1.0",
     "wrangler": "^4.83.0"
   },
-  "pnpm": {
-    "overrides": {
-      "tar": "7.5.22"
-    }
-  }
+  "packageManager": "pnpm@11.9.0"
 }

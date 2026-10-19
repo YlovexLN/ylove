@@ -64,6 +64,7 @@
 
 3. **说明**
    - 项目根 `wrangler.jsonc` 提供 `name` / `compatibility_date` / `compatibility_flags`（含 `nodejs_compat`），构建时自动合并到 `dist/server/wrangler.json`。
+   - **Workers Builds（Git 连接）需把 pnpm 固定为与本地一致的版本**：`Settings → Build → Build variables and secrets` 添加 `PNPM_VERSION = 11.9.0`。本项目的 `pnpm-workspace.yaml` 用了 pnpm 10+ 才支持的设置（`overrides` 等），而 Workers Builds 默认的 pnpm 9.10.0 读不到，会依次报 `packages field missing or empty`、`LOCKFILE_CONFIG_MISMATCH`。
    - 环境变量（如 `STRAPI_URL`）：`pnpm exec wrangler secret put STRAPI_URL`。
    - 已通过 `wrangler deploy --dry-run` 验证（24 个 server 模块 + 25 个静态资源 + KV/Images/Assets 绑定正常）。
 
