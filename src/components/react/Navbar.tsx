@@ -11,18 +11,17 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // ── Minimal 顶部导航 ──
+  // ── Minimal 顶部导航（滚动后只叠一层向下渐隐的暗色遮罩，无毛玻璃、无硬边框）──
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 ${
         scrolled
-          ? "scrolled bg-black/80 backdrop-blur-xl border-b border-border-default"
+          ? "bg-[linear-gradient(to_bottom,rgba(0,0,0,0.72),rgba(0,0,0,0.42)_65%,transparent)]"
           : "bg-transparent"
       }`}
     >

@@ -253,20 +253,6 @@ export default function Hero({
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-4">
-      
-
-      {/* Animated grid lines */}
-      <div className="absolute inset-0 opacity-[0.03]">
-        <div
-          className="w-full h-full"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-            backgroundSize: "60px 60px",
-          }}
-        />
-      </div>
-
       <div className="relative z-10 text-center max-w-3xl mx-auto">
         {/* Avatar */}
         <div
