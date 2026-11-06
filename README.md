@@ -87,9 +87,7 @@ src/
 
 ## 🤝 贡献者
 
-- **YlovexLN** — 作者与维护者
-- **GitHub Copilot** — AI 编程助手，参与功能开发、部署配置与文档
-- **DeepSeek Harness**（`deepseek-v4.1-flash` 模型）— AI 编程助手，参与背景视觉调整、代码与文档整理
-
-[![](https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square&logo=deepseek&logoColor=white)](https://github.com/deepseek-ai/deepseek-harness)
-
+- **YlovexLN** — 项目作者，负责设计、开发与维护
+- **GitHub Copilot** — AI 编程助手，参与功能开发与多平台部署配置
+- **DeepSeek Harness** — AI 编程助手，参与背景视觉、代码与文档整理
+- **所用模型** — `deepseek-v4.1-flash`
