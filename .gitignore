@@ -1,40 +1,44 @@
-# build output
+# Dependencies 依赖
+node_modules/
+.pnpm-store/
+
+# Build output 构建产物
 dist/
+.output/
+.vercel/
+.netlify/
 .edgeone/
 .wrangler/
-.netlify/
-.vercel/
-
-# generated types
 .astro/
 
-# dependencies
-node_modules/
+# Cache 缓存
+.cache/
+.vite/
+*.tsbuildinfo
 
-# logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+# Logs 日志
+*.log
 
-
-# environment variables
+# Env 环境变量
 .env
+.env.local
+.env.*.local
 .env.production
+!.env.example
 
-# macOS-specific files
-.DS_Store
-
-# jetbrains setting folder
+# Editor / OS 编辑器 / 系统
 .idea/
-
-# IDE files
 .codesandbox/
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# pnpm files
-.pnpm-store
+# Temp 临时文件
+*.bak
+*.tmp
 
-# public files
+# Local assets 本地资源
 public/avatars/bili_*
 
-*.bak
+# Tools 工具
+.dsh-ops/
