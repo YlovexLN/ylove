@@ -61,11 +61,31 @@ export default defineConfig({
       reportCompressedSize: false,
     },
     optimizeDeps: {
-      // 跳过对 Font Awesome 大图标包的预打包，缩短 dev 启动时间
-      exclude: [
+      // 预打包 Font Awesome 图标包：这两个包是单文件、上千个导出，
+      // 若排除在预打包之外，dev 每次启动都要现场转换整个巨大文件（实测拖慢启动 20s+，
+      // 甚至撞上 Vite module runner 的 60s 传输超时）。
+      // 预打包后产物缓存在 node_modules/.vite/deps，后续启动直接命中缓存。
+      include: [
         '@fortawesome/free-brands-svg-icons',
         '@fortawesome/free-solid-svg-icons',
       ],
+    },
+    server: {
+      watch: {
+        // 监听器忽略依赖与构建产物：项目根下 node_modules（3.8w 文件）与
+        // .pnpm-store（5.3w 文件、829MB）合计近 9 万文件，爬一遍要几十秒，
+        // 会把 dev 启动拖到 40s+ 甚至撞上 Vite 的 60s 传输超时。
+        ignored: [
+          '**/node_modules/**',
+          '**/.pnpm-store/**',
+          '**/.git/**',
+          '**/dist/**',
+          '**/.astro/**',
+          '**/.netlify/**',
+          '**/.wrangler/**',
+          '**/.edgeone/**',
+        ],
+      },
     },
   },
 });
