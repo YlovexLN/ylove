@@ -45,22 +45,58 @@ async function readEndpoint(name) {
 
 /**
  * 依据 config.toml 的 [monitor] / [[monitor.targets]] 生成边缘函数的默认配置。
+ *
+ * ESA 控制台的「环境变量」是**构建期**注入的（与 BILIBILI_UID 同理），边缘函数运行时
+ * 读不到，所以这里把环境变量与 config.toml 的最终结果烘焙进 monitor-defaults.js。
+ * 优先级与站点其它配置一致：环境变量 > config.toml。
+ *
  * 生成的数组只保留探测所需字段，且丢弃缺少必填项的条目（与 src/data/monitor.ts 的规则一致）。
  */
 async function generateMonitorDefaults() {
   let monitor = {};
-  let rawTargets = [];
+  let fileTargets = [];
 
   try {
     const config = parse(await readFile(configFile, "utf8"));
     monitor = config.monitor || {};
-    rawTargets = Array.isArray(monitor.targets) ? monitor.targets : [];
+    fileTargets = Array.isArray(monitor.targets) ? monitor.targets : [];
   } catch (error) {
-    console.warn(`[esa-build] 读取 config.toml 失败，监控默认值留空：${error.message}`);
+    console.warn(`[esa-build] 读取 config.toml 失败，监控默认值改用环境变量：${error.message}`);
+  }
+
+  /** 读构建期环境变量；空串视为未设置 */
+  const env = (key) => {
+    const value = process.env[key];
+    return value === undefined || value === "" ? undefined : value;
+  };
+  const envNum = (key) => {
+    const raw = env(key);
+    if (raw === undefined) return undefined;
+    const num = Number(raw);
+    return Number.isFinite(num) ? num : undefined;
+  };
+
+  // 节点：环境变量 MONITOR_TARGETS 优先，其次 config.toml
+  let rawTargets = fileTargets;
+  let source = `config.toml（${fileTargets.length} 个节点）`;
+  const envTargets = env("MONITOR_TARGETS");
+  if (envTargets !== undefined) {
+    try {
+      const parsed = JSON.parse(envTargets);
+      if (Array.isArray(parsed)) {
+        rawTargets = parsed;
+        source = `环境变量 MONITOR_TARGETS（${parsed.length} 个节点）`;
+      } else {
+        console.warn("[esa-build] MONITOR_TARGETS 必须是 JSON 数组，已改用 config.toml");
+      }
+    } catch {
+      console.warn("[esa-build] MONITOR_TARGETS 不是合法 JSON（检查是否为半角标点），已改用 config.toml");
+    }
   }
 
   const targets = rawTargets
     .map((item, index) => {
+      if (!item || typeof item !== "object") return null;
       const id = item.id || `target-${index + 1}`;
       const name = item.name || `目标 ${index + 1}`;
 
@@ -82,27 +118,27 @@ async function generateMonitorDefaults() {
     })
     .filter(Boolean);
 
-  const content = `// 由 scripts/esa-build.mjs 依据 config.toml 的 [monitor] / [[monitor.targets]] 生成，请勿手改。
+  const defaults = {
+    title: env("MONITOR_TITLE") || monitor.title || "服务可用率",
+    interval: envNum("MONITOR_INTERVAL") ?? (Number(monitor.interval) || 60),
+    timeout: envNum("MONITOR_TIMEOUT") ?? (Number(monitor.timeout) || 5000),
+    showHosts: env("MONITOR_SHOW_HOSTS") !== undefined
+      ? env("MONITOR_SHOW_HOSTS") !== "false"
+      : monitor.show_hosts === true,
+  };
+
+  const content = `// 由 scripts/esa-build.mjs 生成，请勿手改（已在 .gitignore 中忽略）。
 //
-// 边缘函数是独立打包的，读不到 config.toml（那份文件由 Vite 在构建期内联），
-// 所以构建时把「配置文件里的默认值」写进这个文件，作为平台环境变量缺失时的兜底。
-// 优先级：平台环境变量 > 本文件（来自 config.toml）。
+// ESA 控制台的环境变量是构建期注入的，边缘函数运行时读不到，
+// 所以构建时把「环境变量 / config.toml 的最终结果」烘焙进本文件。
+// 优先级：构建期环境变量 > config.toml。
 export const DEFAULT_TARGETS = ${JSON.stringify(targets, null, 2)};
 
-export const DEFAULT_MONITOR = ${JSON.stringify(
-    {
-      title: monitor.title || "服务可用率",
-      interval: Number(monitor.interval) || 60,
-      timeout: Number(monitor.timeout) || 5000,
-      showHosts: monitor.show_hosts === true,
-    },
-    null,
-    2
-  )};
+export const DEFAULT_MONITOR = ${JSON.stringify(defaults, null, 2)};
 `;
 
   await writeFile(defaultsFile, content, "utf8");
-  console.log(`[esa-build] 已生成 esa/functions/monitor-defaults.js（${targets.length} 个节点）`);
+  console.log(`[esa-build] 已生成 esa/functions/monitor-defaults.js（来源：${source}）`);
 }
 
 async function main() {

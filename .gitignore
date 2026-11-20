@@ -42,3 +42,6 @@ public/avatars/bili_*
 
 # Tools 工具
 .dsh-ops/
+
+# Generated 构建期生成（含平台环境变量里的节点地址，勿提交）
+esa/functions/monitor-defaults.js
