@@ -85,6 +85,8 @@ export default function StatusPage() {
   const [loaded, setLoaded] = useState(false);
   // 运行时开关：平台侧关掉监控时页面只提示，不显示任何节点
   const [enabled, setEnabled] = useState(true);
+  // 配置有误时的提示（如 MONITOR_TARGETS 不是合法 JSON）
+  const [warning, setWarning] = useState("");
 
   const tick = useCallback(async () => {
     setBusy(true);
@@ -96,6 +98,7 @@ export default function StatusPage() {
       setTitle(data.title);
       setIntervalValue(data.interval);
       setEnabled(data.enabled !== false);
+      setWarning(data.warning || "");
       setTargets(data.targets || []);
       setResults(Object.fromEntries(data.results.map((r) => [r.id, r])));
       setUpdatedAt(data.ts);
@@ -159,7 +162,7 @@ export default function StatusPage() {
         </p>
       ) : loaded && targets.length === 0 ? (
         <p className="rounded-xl border border-border-default bg-bg-card p-6 text-sm text-text-muted">
-          尚未配置监控目标。
+          {warning ? `监控配置有误：${warning}（请检查环境变量 MONITOR_TARGETS 的 JSON 格式）` : "尚未配置监控目标。"}
         </p>
       ) : (
         <div className="grid gap-4">

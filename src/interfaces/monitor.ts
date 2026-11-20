@@ -64,4 +64,6 @@ export interface MonitorResponse {
   /** 本次实际探测的目标清单（页面按此渲染，不依赖构建期注入） */
   targets: PublicMonitorTarget[];
   results: ProbeResult[];
+  /** 配置有问题时的提示（如 MONITOR_TARGETS 不是合法 JSON），页面据此给出说明 */
+  warning?: string;
 }

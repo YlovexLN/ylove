@@ -38,6 +38,7 @@ export const GET: APIRoute = async ({ locals }) => {
       tcp: tcpSupported(),
       targets: [],
       results: [],
+      ...(config.warning ? { warning: config.warning } : {}),
     };
     return json(JSON.stringify(payload));
   }
@@ -54,6 +55,7 @@ export const GET: APIRoute = async ({ locals }) => {
     // 目标清单随结果一起下发：页面完全由接口驱动，构建期不注入任何节点信息
     targets: toPublicTargets(config.targets),
     results,
+    ...(config.warning ? { warning: config.warning } : {}),
   };
   const body = JSON.stringify(payload);
 

@@ -47,6 +47,8 @@ export interface MonitorConfig {
   timeout: number;
   /** 探测目标（含 host / url，服务端专用，不直接下发前端） */
   targets: MonitorTarget[];
+  /** 环境变量解析失败等提示，随接口下发给页面 */
+  warning?: string;
 }
 
 type EnvRecord = Record<string, string | undefined>;
@@ -79,18 +81,28 @@ function hostFromEnv(env: EnvRecord, id: string): string {
   return envStr(env, key) || "";
 }
 
-/** MONITOR_TARGETS：JSON 数组，整体覆盖 config.toml 的 [[monitor.targets]] */
-function targetsFromEnv(env: EnvRecord): RawTarget[] | null {
+/**
+ * MONITOR_TARGETS：JSON 数组，整体覆盖 config.toml 的 [[monitor.targets]]。
+ * 解析失败返回 null（回落 config.toml），并把原因写进 warning 供页面提示。
+ * 注意 JSON 必须是半角标点（中文输入法的「，」「：」会让解析失败）。
+ */
+function targetsFromEnv(env: EnvRecord): { targets: RawTarget[] | null; warning?: string } {
   const value = envStr(env, "MONITOR_TARGETS");
-  if (!value) return null;
+  if (!value) return { targets: null };
+
+  let parsed: unknown;
   try {
-    const parsed = JSON.parse(value);
-    if (!Array.isArray(parsed)) return null;
-    return parsed.filter((item) => item && typeof item === "object") as RawTarget[];
+    parsed = JSON.parse(value);
   } catch {
-    console.warn("[monitor] MONITOR_TARGETS 不是合法 JSON，已回落 config.toml");
-    return null;
+    console.warn("[monitor] MONITOR_TARGETS 不是合法 JSON（检查是否为半角标点），已回落 config.toml");
+    return { targets: null, warning: "MONITOR_TARGETS 不是合法 JSON" };
   }
+
+  if (!Array.isArray(parsed)) {
+    return { targets: null, warning: "MONITOR_TARGETS 必须是 JSON 数组" };
+  }
+
+  return { targets: parsed.filter((item) => item && typeof item === "object") as RawTarget[] };
 }
 
 /** 把配置项规整为探测目标；缺少必填字段（url / host+port）的项直接跳过 */
@@ -153,12 +165,13 @@ export function resolveMonitorConfig(env: EnvRecord = {}): MonitorConfig {
   );
   const showHosts = envBool(env, "MONITOR_SHOW_HOSTS") ?? (config.monitor?.show_hosts === true);
 
-  const rawTargets = targetsFromEnv(env) ?? config.monitor?.targets ?? [];
+  const fromEnv = targetsFromEnv(env);
+  const rawTargets = fromEnv.targets ?? config.monitor?.targets ?? [];
   const targets = rawTargets
     .map((item, index) => toTarget(item, index, showHosts, env))
     .filter((t): t is MonitorTarget => t !== null);
 
-  return { enabled, title, interval, timeout, targets };
+  return { enabled, title, interval, timeout, targets, warning: fromEnv.warning };
 }
 
 /** 构建期内联的环境变量（Vite 会在构建时把 import.meta.env 静态替换） */

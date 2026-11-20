@@ -73,12 +73,15 @@ async function getFaceUrl(uid: string): Promise<string> {
 // ESA 边缘运行时没有 raw socket，只能做 HTTP 探测；
 // TCP 目标一律返回 unsupported（前端显示「不支持」，不会误报故障）。
 //
-// 配置来源：请求时读运行时环境变量（ESA Runtime API 提供 process.env 子接口），
-// 与 Node / Netlify / Cloudflare 的行为一致；读不到时回落到下面的默认清单。
-//   MONITOR_SHOW / MONITOR_TITLE / MONITOR_INTERVAL / MONITOR_TIMEOUT /
-//   MONITOR_SHOW_HOSTS / MONITOR_TARGETS(JSON 数组)
+// 配置来源（优先级从高到低）：
+//   1. 平台环境变量（ESA Runtime API 提供 process.env 子接口）：
+//      MONITOR_SHOW / MONITOR_TITLE / MONITOR_INTERVAL / MONITOR_TIMEOUT /
+//      MONITOR_SHOW_HOSTS / MONITOR_TARGETS(JSON 数组)
+//   2. config.toml 的 [monitor] —— 构建期由 scripts/esa-build.mjs 写进 monitor-defaults.js
 //
 // 节点清单随接口响应一起下发，页面按接口返回渲染，构建期不注入任何节点信息。
+import { DEFAULT_MONITOR, DEFAULT_TARGETS } from "./monitor-defaults.js";
+
 interface MonitorTarget {
   id: string;
   name: string;
@@ -113,30 +116,37 @@ function envNum(key: string): number | undefined {
   return Number.isFinite(num) ? num : undefined;
 }
 
-/** 默认清单：环境变量未配置时使用 */
-const DEFAULT_TARGETS: MonitorTarget[] = [
-  { id: "github", name: "GitHub 主页", type: "http", url: "https://github.com/YlovexLN", secure: true },
-  { id: "mc", name: "Minecraft 生存服", type: "tcp" },
-];
+const DEFAULT_TIMEOUT = DEFAULT_MONITOR.timeout;
+const DEFAULT_TITLE = DEFAULT_MONITOR.title;
+const DEFAULT_INTERVAL = DEFAULT_MONITOR.interval;
 
-const DEFAULT_TIMEOUT = 5000;
-const DEFAULT_TITLE = "服务可用率";
-const DEFAULT_INTERVAL = 240;
-
-/** 解析 MONITOR_TARGETS（JSON 数组），非法时回落到默认清单 */
-function resolveTargets(): MonitorTarget[] {
+/**
+ * 解析节点清单。优先级：平台环境变量 MONITOR_TARGETS > config.toml（构建期写入 monitor-defaults.js）。
+ * 环境变量存在但解析失败时，回落到 config.toml 的节点并附 warning。
+ * 注意 JSON 必须是半角标点（中文输入法的「，」「：」会让解析失败）。
+ */
+function resolveTargets(): { targets: MonitorTarget[]; warning?: string } {
+  const fromConfig = DEFAULT_TARGETS as MonitorTarget[];
   const raw = readEnv("MONITOR_TARGETS");
-  if (!raw) return DEFAULT_TARGETS;
+
+  // 平台没配 → 用配置文件里的默认节点
+  if (!raw) return { targets: fromConfig };
+
+  let parsed: unknown;
   try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return DEFAULT_TARGETS;
-    const list = parsed.filter((item) => item && typeof item === "object") as MonitorTarget[];
-    return list.length > 0 ? list : DEFAULT_TARGETS;
+    parsed = JSON.parse(raw);
   } catch {
     // ESA 边缘运行时只支持 console.log / console.alert
-    console.log("[monitor] MONITOR_TARGETS 不是合法 JSON，已回落默认清单");
-    return DEFAULT_TARGETS;
+    console.log("[monitor] MONITOR_TARGETS 不是合法 JSON（检查是否为半角标点），已回落 config.toml");
+    return { targets: fromConfig, warning: "MONITOR_TARGETS 不是合法 JSON" };
   }
+
+  if (!Array.isArray(parsed)) {
+    return { targets: fromConfig, warning: "MONITOR_TARGETS 必须是 JSON 数组" };
+  }
+
+  const list = parsed.filter((item) => item && typeof item === "object") as MonitorTarget[];
+  return { targets: list };
 }
 
 /** 展示用地址：show_hosts 关闭时返回空串，避免主机名 / IP 外泄 */
@@ -196,18 +206,19 @@ async function handleMonitor(): Promise<Response> {
   const title = readEnv("MONITOR_TITLE") || DEFAULT_TITLE;
   const interval = Math.max(30, envNum("MONITOR_INTERVAL") ?? DEFAULT_INTERVAL);
   const timeout = Math.min(10_000, Math.max(1_000, envNum("MONITOR_TIMEOUT") ?? DEFAULT_TIMEOUT));
-  const showHosts = envBool("MONITOR_SHOW_HOSTS") ?? false;
-  const targets = resolveTargets();
+  const showHosts = envBool("MONITOR_SHOW_HOSTS") ?? DEFAULT_MONITOR.showHosts;
+  const { targets, warning } = resolveTargets();
 
   if (!enabled || targets.length === 0) {
     const empty = JSON.stringify({
       ts: Date.now(),
-      enabled: false,
+      enabled,
       title,
       interval,
       tcp: false,
       targets: [],
       results: [],
+      ...(warning ? { warning } : {}),
     });
     return new Response(empty, {
       headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=20" },

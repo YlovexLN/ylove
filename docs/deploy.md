@@ -165,7 +165,8 @@
 > **ESA 说明**：ESA 下 `/api/monitor` 由边缘函数 `esa/functions/bili-api.ts` 提供。ESA 边缘运行时支持 `process.env`（Runtime API 仅暴露 `env` / `nextTick`），因此上面全部 `MONITOR_*` 变量在 ESA 上同样生效，改完重新部署即可。
 >
 > - 变量配在 ESA 控制台的 **Pages / 函数 → 环境变量**（生产环境 / 测试环境分别勾选）
-> - `MONITOR_TARGETS` 未配置或 JSON 非法时，回落到函数内的默认清单（`DEFAULT_TARGETS`）
+> - **默认值来自 `config.toml`**：边缘函数独立打包、读不到 config.toml，故 `pnpm build:esa` 会把 `[monitor]` 与 `[[monitor.targets]]` 生成到 `esa/functions/monitor-defaults.js`。优先级仍是 **平台环境变量 > config.toml**
+> - `MONITOR_TARGETS` **必须是半角标点的 JSON**（中文输入法的「，」「：」会导致解析失败）；解析失败时回落到 config.toml 的节点，并在页面提示「监控配置有误：…」
 > - TCP 目标在边缘运行时无法探测（无 raw socket），接口返回 `unsupported`，页面显示「不支持」而不是误报故障
 
 > **优先级**：环境变量 > `config.toml`。开关类变量相互独立，可只填其一。
