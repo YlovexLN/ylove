@@ -29,7 +29,7 @@ graph TD
     L["/api/works：作品实时接口"]
   end
   subgraph 部署层
-    M["Node / Cloudflare / Netlify / EdgeOne / ESA"]
+    M["Node / Cloudflare / Netlify / ESA"]
   end
 
   A --> B

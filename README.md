@@ -72,7 +72,6 @@ src/
 | Cloudflare | `pnpm build:cloudflare` | `dist/client` + `dist/server` |
 | Netlify | `pnpm build:netlify` | `dist/` + `.netlify/` |
 | ESA | `pnpm build:esa` | `dist/`（静态托管 + 边缘函数） |
-| EdgeOne | `pnpm build:edgeone` | `.edgeone/`（待官方适配 Astro 7） |
 
 环境变量（`BILIBILI_UID`、`STRAPI_URL`、`FOOTER_SHOW` 等）可在平台控制台配置，构建时读取并覆盖 `config.toml`，改后需重新构建。
 

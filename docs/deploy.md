@@ -12,7 +12,6 @@
 | Cloudflare Workers | `pnpm build:cloudflare` | `dist/client` + `dist/server` |
 | Netlify | `pnpm build:netlify` | `dist/` + `.netlify/` |
 | 阿里云 ESA（函数和 Pages） | `pnpm build:esa` | `dist/`（静态托管）+ 边缘函数 |
-| 腾讯云 EdgeOne | `pnpm build:edgeone`（待适配 Astro 7） | `.edgeone/` |
 
 ## 部署到 Node.js（自托管 / VPS）
 
@@ -110,34 +109,13 @@
    - 推送到 GitHub 后，在 ESA 控制台导入仓库自动构建部署（`esa.jsonc` 的 `buildCommand` 为 `pnpm run build:esa`）。
    - 构建所需环境变量（`BILIBILI_UID` 等）在控制台「构建信息 → 环境变量」配置，Node 版本选择 ≥ 22。
 
-## 部署到腾讯云 EdgeOne ⏳（待官方适配 Astro 7）
-
-> **当前状态**：`@edgeone/astro@1.1.5` 仅支持 Astro 5 / 6，**尚未适配 Astro 7**。本项目已升级到 Astro 7，因此 `pnpm build:edgeone` 会失败。适配器分支已在 `astro.config.mjs` 的 `resolveAdapter()` 中启用，等待官方发布支持 Astro 7 的新版本后升级 `@edgeone/astro` 即可恢复。
-
-- 构建：`pnpm build:edgeone`（当前不可用），产物 `.edgeone/`（`assets/` + `cloud-functions/`）
-- 项目配置：`edgeone.json`
-
-  ```json
-  {
-    "name": "ylove",
-    "installCommand": "pnpm install",
-    "buildCommand": "pnpm build:edgeone",
-    "outputDirectory": ".edgeone",
-    "nodeVersion": "24.11.0"
-  }
-  ```
-
-- 部署方式：
-  - **Git 导入**：推送到 GitHub / GitLab 后，在 [EdgeOne Makers 控制台](https://console.tencentcloud.com/edgeone/makers) 导入仓库，自动构建部署。
-  - **CLI**：`pnpm build:edgeone && edgeone makers deploy`。
-
 ## 环境变量（覆盖配置文件）
 
-`Cloudflare Workers`、`Netlify` 与 `EdgeOne` 均支持用环境变量覆盖 `config.toml` 中的配置，免改代码。构建时读取，修改后需**重新构建部署**生效。
+`Cloudflare Workers`、`Netlify` 与 `ESA` 均支持用环境变量覆盖 `config.toml` 中的配置，免改代码。构建时读取，修改后需**重新构建部署**生效。
 
 | 变量 | 说明 |
 | --- | --- |
-| `DEPLOY_TARGET` | 构建目标：`node` / `cloudflare` / `netlify` / `edgeone`（构建脚本已自动设置） |
+| `DEPLOY_TARGET` | 构建目标：`node` / `cloudflare` / `netlify` / `esa`（构建脚本已自动设置） |
 | `PAGE_MODE` | 页面模式：`single` / `scroll` |
 | `BILIBILI_UID` | B站 UID |
 | `STRAPI_URL` / `STRAPI_TOKEN` | Strapi 数据源地址与 Token |
@@ -194,17 +172,6 @@ MONITOR_HOST_MC=example.com
 > 平台侧若未配置任何节点，`/status` 会显示「尚未配置监控目标」（而不是误报成「已关闭」）。
 
 ## 已知问题与排查
-
-### `@edgeone/astro` 与 Astro 版本兼容性
-
-- **历史**：`@edgeone/astro@1.1.5` 只支持 Astro 5 / 6（peer `^5.0.0 || ^6.0.0`），**不支持 Astro 7**。在 Astro 7 下部署会报 `502: CLOUD_FUNCTION_INVOCATION_FAILED`，根因是 Astro 7 生成的 SSR 入口 `entry.mjs` 的 `default` 为 `undefined`（产物为 `createExports` 形态），而 `@edgeone/astro` 的 `handler.js` 固定 `import('entry.mjs').default` 后调用 → 崩溃。
-- **曾用方案**：降级到 Astro 6.4.8（`@astrojs/cloudflare` 13.x、`@astrojs/node` 10.x）可让 EdgeOne 正常构建部署。
-- **当前方案（已应用）**：升级回 **Astro 7.2.1**，`@astrojs/cloudflare` 14.2.1、`@astrojs/node` 11.1.1，并新增 `@astrojs/netlify` 8.2.1。EdgeOne 适配器保留但暂不可用，等待官方支持 Astro 7。
-
-### EdgeOne 构建环境 Node 版本
-
-- Astro 7 要求 Node ≥ 22.12，EdgeOne 构建环境的 `nodeVersion` **不能设为 `22.11.0`**，应使用预装版本 `22.17.1` / `22.21.1` / `24.11.0` 等。
-- EdgeOne 的 `outputDirectory` 必须指向 `.edgeone`（`@edgeone/astro` 适配器的产物目录），不是 `dist`。
 
 ### 其他注意事项
 

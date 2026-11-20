@@ -10,7 +10,7 @@ YLOVEXLN 个人主页：以单页为主的个人品牌站点，**纯黑极简 + 
 | --- | --- |
 | 目标用户 | 希望拥有个人品牌展示页面的开发者 / 设计师 |
 | 核心价值 | 极简视觉、模块化可配置（`config.toml`）、构建期静态化的高性能、B站深度集成 |
-| 形态 | 静态页 + SSR API，多目标部署（Node / Cloudflare / Netlify / EdgeOne / ESA） |
+| 形态 | 静态页 + SSR API，多目标部署（Node / Cloudflare / Netlify / ESA） |
 | 技术栈 | Astro 7 + Preact 10（React compat 写法）+ TailwindCSS 4 + Font Awesome 7 图标数据 + TypeScript |
 
 ## 2. 核心功能

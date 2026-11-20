@@ -85,8 +85,8 @@ url = "https://www.qiniu.com/"
 
 [[footer.items]]
 label = "HOST - "
-text = "EdgeOne"
-url = "https://edgeone.ai/"
+text = "你的主机商"
+url = "https://example.com/"
 
 # 备案号（独立配置）
 [footer.icp]

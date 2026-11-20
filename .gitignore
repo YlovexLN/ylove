@@ -7,7 +7,6 @@ dist/
 .output/
 .vercel/
 .netlify/
-.edgeone/
 .wrangler/
 .astro/
 

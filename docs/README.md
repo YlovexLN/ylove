@@ -6,7 +6,7 @@ YLOVEXLN 个人主页的文档索引。日常改配置先看根目录 [README.md
 | --- | --- | --- |
 | 产品需求（PRD） | [`.agents/context/prd.md`](../.agents/context/prd.md) | 产品定位、功能模块、页面清单、交互流程、视觉与响应式要求 |
 | 技术架构 | [`.agents/context/architecture.md`](../.agents/context/architecture.md) | 技术选型、目录结构、路由与 API、数据模型、设计令牌、约束与约定 |
-| 部署指南 | [`deploy.md`](deploy.md) | Node / Cloudflare / Netlify / EdgeOne / ESA 的构建部署、环境变量、排障 |
+| 部署指南 | [`deploy.md`](deploy.md) | Node / Cloudflare / Netlify / ESA 的构建部署、环境变量、排障 |
 
 ## 常见入口
 

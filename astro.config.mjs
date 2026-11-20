@@ -6,7 +6,6 @@ import tailwindcss from '@tailwindcss/vite';
 // 部署目标：通过环境变量选择，构建时无需修改本文件
 //   DEPLOY_TARGET=cloudflare → Cloudflare Workers（产物 dist/client + dist/server）
 //   DEPLOY_TARGET=netlify    → Netlify Functions（产物 dist/ + .netlify/）
-//   DEPLOY_TARGET=edgeone    → EdgeOne Makers（产物 .edgeone/，等官方适配 Astro 7）
 //   DEPLOY_TARGET=esa        → 阿里云 ESA 函数和Pages（纯静态构建，动态接口走边缘函数，见 esa.jsonc）
 //   其他（默认）              → Node.js Standalone（本地开发 / 自托管）
 const deployTarget = process.env.DEPLOY_TARGET || 'node';
@@ -15,7 +14,7 @@ const deployTarget = process.env.DEPLOY_TARGET || 'node';
 const isEsa = deployTarget === 'esa';
 
 // 按部署目标选择适配器。
-// 用动态 import：4 个适配器包只在被选中时才加载，否则每次都把它们全部读进来，
+// 用动态 import：各适配器包只在被选中时才加载，否则每次都把它们全部读进来，
 // 会明显拖慢 build / dev 的启动（适配器包本身都不小）。
 async function resolveAdapter() {
   switch (deployTarget) {
@@ -26,14 +25,6 @@ async function resolveAdapter() {
     case 'netlify': {
       const { default: netlify } = await import('@astrojs/netlify');
       return netlify();
-    }
-    case 'edgeone': {
-      // ⚠️ @edgeone/astro@1.1.5 仅支持 Astro 5/6，尚未适配 Astro 7，
-      // 构建会失败，等待官方发布新版本后再启用
-      const { default: edgeone } = await import('@edgeone/astro');
-      return edgeone({
-        includeFiles: ['node_modules/clsx/**'],
-      });
     }
     case 'esa':
       // 纯静态构建，无需适配器；构建请走 pnpm build:esa（scripts/esa-build.mjs），
@@ -83,7 +74,6 @@ export default defineConfig({
           '**/.astro/**',
           '**/.netlify/**',
           '**/.wrangler/**',
-          '**/.edgeone/**',
         ],
       },
     },
