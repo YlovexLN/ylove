@@ -151,7 +151,7 @@ show = false
 enabled  = true
 title    = "服务可用率"
 interval = 240
-timeout  = 5000
+timeout  = 10000
 show_hosts = false
 
 # 占位示例：真实节点用平台环境变量 MONITOR_TARGETS 配置（格式见 docs/deploy.md）

@@ -216,9 +216,17 @@ function TargetCard({ target, result, loaded, buckets, hours }: CardProps) {
           <span className="shrink-0 rounded border border-border-default px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-text-muted">
             {target.type}
           </span>
-          {result && !result.unsupported && (
+          {result && !result.unsupported && !result.self && (
             <span className="shrink-0 text-xs tabular-nums text-text-muted">
               {result.ok ? `${result.ms} ms` : result.error || "不可用"}
+            </span>
+          )}
+          {result?.self && (
+            <span
+              className="shrink-0 text-xs text-text-muted"
+              title="目标就是当前站点自身，边缘函数无法探测自己的域名，故按「正在服务请求」判定在线"
+            >
+              自身
             </span>
           )}
           {missing && (

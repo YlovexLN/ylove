@@ -47,6 +47,12 @@ export interface ProbeResult {
   certDays?: number;
   /** 当前运行时无该类型检测能力（如边缘函数下的 TCP） */
   unsupported?: boolean;
+  /**
+   * 目标就是当前站点自身（同域名）。
+   * 边缘函数请求自己的域名会被平台拦成 502，无法真实探测；
+   * 但「能返回这个响应」本身就说明站点在线，故直接判定可用并打上该标记。
+   */
+  self?: boolean;
 }
 
 /** /api/monitor 响应体 */

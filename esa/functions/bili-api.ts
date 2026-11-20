@@ -161,6 +161,20 @@ function targetLabel(target: MonitorTarget, showHosts: boolean): string {
   }
 }
 
+/**
+ * 目标是否指向当前站点自身。
+ * 比较时忽略 www. 前缀（www.example.com 与 example.com 视为同一站点）。
+ */
+function isSelfTarget(url: string | undefined, selfHost: string): boolean {
+  if (!url) return false;
+  const strip = (host: string) => host.toLowerCase().replace(/^www\./, "");
+  try {
+    return strip(new URL(url).host) === strip(selfHost);
+  } catch {
+    return false;
+  }
+}
+
 let monitorCache: { ts: number; body: string } | null = null;
 
 async function probeHttpTarget(
@@ -198,7 +212,7 @@ async function probeHttpTarget(
   }
 }
 
-async function handleMonitor(): Promise<Response> {
+async function handleMonitor(selfHost: string): Promise<Response> {
   const now = Date.now();
 
   // 配置在请求时解析：平台环境变量改了重新部署即生效，无需改代码
@@ -232,11 +246,17 @@ async function handleMonitor(): Promise<Response> {
   }
 
   const results = await Promise.all(
-    targets.map((target) =>
-      target.type === "tcp"
-        ? Promise.resolve({ id: target.id, ok: false, ms: 0, unsupported: true })
-        : probeHttpTarget(target, timeout)
-    )
+    targets.map((target) => {
+      if (target.type === "tcp") {
+        return Promise.resolve({ id: target.id, ok: false, ms: 0, unsupported: true });
+      }
+      // 目标就是当前站点自身：边缘函数请求自己的域名会被 ESA 拦成 502，
+      // 无法真实探测；但「能返回这个响应」已说明站点在线，直接判可用并打标记。
+      if (isSelfTarget(target.url, selfHost)) {
+        return Promise.resolve({ id: target.id, ok: true, ms: 0, self: true });
+      }
+      return probeHttpTarget(target, timeout);
+    })
   );
 
   // 节点清单随结果下发：页面完全由接口驱动，静态 HTML 不含任何节点信息
@@ -265,7 +285,7 @@ export default {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname.startsWith("/api/monitor")) {
-      return handleMonitor();
+      return handleMonitor(url.host);
     }
     if (!url.pathname.startsWith("/api/bili-api")) {
       return new Response("Not Found", { status: 404 });
