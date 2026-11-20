@@ -2,6 +2,10 @@ import { parse } from "smol-toml";
 import raw from "../../config.toml?raw";
 import { isSponsorEnabled } from "./sponsor";
 
+// ⚠️ 本模块 import 了 config.toml?raw：只能在 .astro 页面 / API 等构建期与服务端代码里使用。
+//    一旦被 src/components/react/ 下的客户端组件 import，整份 config.toml 会被打进浏览器
+//    bundle（泄漏 B站 UID、主机名等）。客户端需要什么就由页面当 props 传进去。
+
 interface RawSocial {
   name: string;
   url: string;
@@ -144,6 +148,9 @@ function resolveBilibiliUid(): number | undefined {
 // 解析页脚底部信息：内容来自 config.toml，环境变量仅控制开关（便于部署后免改代码）
 //   FOOTER_SHOW      = "false" 隐藏整行（默认 true）
 //   FOOTER_ICP_SHOW  = "false" 单独隐藏备案号（默认 true，仅当配置了 [footer.icp]）
+//   FOOTER_ICP_TEXT / FOOTER_ICP_URL / FOOTER_ICP_LABEL
+//                    覆盖备案号的文本 / 链接 / 前缀文字；config.toml 未写 [footer.icp] 时，
+//                    只给 FOOTER_ICP_TEXT 也能凭空生成一条（链接默认跳工信部）
 function resolveFooter(): RawFooter {
   const footer: RawFooter = {
     show: config.footer?.show !== false,
@@ -154,6 +161,19 @@ function resolveFooter(): RawFooter {
   const envShow = import.meta.env.FOOTER_SHOW;
   if (envShow !== undefined) {
     footer.show = envShow !== "false";
+  }
+
+  // 备案号内容覆盖：环境变量优先，config.toml 兜底
+  const icpText = import.meta.env.FOOTER_ICP_TEXT;
+  const icpUrl = import.meta.env.FOOTER_ICP_URL;
+  const icpLabel = import.meta.env.FOOTER_ICP_LABEL;
+  if (icpText || icpUrl || icpLabel) {
+    footer.icp = {
+      ...footer.icp,
+      text: icpText ?? footer.icp?.text ?? "",
+      url: icpUrl ?? footer.icp?.url ?? "http://beian.miit.gov.cn/",
+      label: icpLabel ?? footer.icp?.label,
+    };
   }
 
   const envIcpShow = import.meta.env.FOOTER_ICP_SHOW;
