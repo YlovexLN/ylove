@@ -19,6 +19,8 @@ pnpm astro dev --background
 
 后台管理：`pnpm astro dev stop` / `pnpm astro dev status` / `pnpm astro dev logs`
 
+> **dev 启动必须快**：Vite module runner 的传输超时是 **60 秒**（硬编码），启动时解析 `virtual:astro:manifest` 若超过就会报 `transport invoke timed out after 60000ms` 并退出。`astro.config.mjs` 的 `vite.server.watch.ignored` 已排除 `node_modules` / `.pnpm-store` 等目录——项目根下这两个目录合计近 9 万文件，监听器爬一遍要几十秒，不排除必然超时。**新增大目录（如新的包缓存）时要同步补进 `ignored`。**
+
 ## 构建与部署
 
 适配器由 `DEPLOY_TARGET` 环境变量自动选择：
@@ -31,7 +33,7 @@ pnpm astro dev --background
 | EdgeOne      | `pnpm build:edgeone`    | `.edgeone/`（待官方适配 Astro 7） |
 | ESA          | `pnpm build:esa`        | `dist/`（Pages 静态托管 + 边缘函数） |
 
-**ESA（阿里云函数和Pages）说明**：官方仅支持 Astro 静态站点生成模式（`output: 'static'`）。`pnpm build:esa` 走 `scripts/esa-build.mjs`：构建前临时移出 SSR 端点 `src/pages/api/bili-api.ts`（静态模式不允许存在，构建后自动恢复），动态接口由边缘函数 `esa/functions/bili-api.ts` 提供（Web Worker API 风格，无 Buffer/process）。仓库根目录 `esa.jsonc` 配置 `entry`（边缘函数）+ `assets.directory`（静态目录），GitHub 仓库自动构建部署。构建所需环境变量（`BILIBILI_UID` 等）需在 ESA 控制台「构建信息 → 环境变量」配置，Node 版本选择 ≥ 22。
+**ESA（阿里云函数和Pages）说明**：官方仅支持 Astro 静态站点生成模式（`output: 'static'`）。`pnpm build:esa` 走 `scripts/esa-build.mjs`：构建前临时移出 SSR 端点 `src/pages/api/`（`bili-api.ts`、`monitor.ts`，静态模式不允许存在，构建后自动恢复），动态接口由边缘函数 `esa/functions/bili-api.ts` 提供（Web Worker API 风格，无 Buffer；边缘运行时支持 `process.env` 与 `console.log`/`console.alert`，`/api/monitor` 只能做 HTTP 探测，TCP 目标返回 unsupported）。仓库根目录 `esa.jsonc` 配置 `entry`（边缘函数）+ `assets.directory`（静态目录），GitHub 仓库自动构建部署。构建所需环境变量（`BILIBILI_UID` 等）需在 ESA 控制台「构建信息 → 环境变量」配置，Node 版本选择 ≥ 22。
 
 ## 项目结构
 
@@ -66,16 +68,22 @@ src/
 | `PAGE_MODE`                       | 页面模式：single / scroll                       |
 | `BILIBILI_UID`                    | B站 UID（头像自动获取）                         |
 | `FOOTER_SHOW` / `FOOTER_ICP_SHOW` | 页脚整行 / 备案号开关                           |
+| `FOOTER_ICP_TEXT` / `FOOTER_ICP_URL` / `FOOTER_ICP_LABEL` | 备案号文本 / 链接 / 前缀文字（覆盖 `[footer.icp]`） |
 | `SPONSOR_SHOW`                    | 赞助总开关（false 隐藏入口并禁用 /sponsor）     |
+| `MONITOR_SHOW` / `MONITOR_TITLE` / `MONITOR_INTERVAL` / `MONITOR_TIMEOUT` / `MONITOR_SHOW_HOSTS` | 服务状态页：开关 / 标题 / 轮询秒数 / 超时 / 是否显示目标地址 |
+| `MONITOR_TARGETS`                 | 服务状态页目标列表，JSON 数组，整体覆盖 `[[monitor.targets]]` |
+| `MONITOR_HOST_<ID>`               | 指定目标的主机名（如 `MONITOR_HOST_MC`），用于不把地址写进仓库 |
 | `STRAPI_URL` / `STRAPI_TOKEN`     | Strapi 数据源                                   |
+
+服务状态页（`/status`）的节点清单**由接口 `/api/monitor` 在请求时下发**，页面按接口返回渲染，构建期不向 HTML 注入任何节点信息（避免静态产物泄露主机名 / IP）。接口优先读平台运行时环境变量（Node / Netlify / ESA 边缘函数的 `process.env`、Cloudflare 的 `locals.runtime.env`），构建期内联的 `import.meta.env` 仅作兜底。
 
 ## 页面与路由
 
-- Astro 中**一个路由 = `src/pages/` 下一个 `.astro` 文件**：主页 `index.astro` → `/`，赞助页 `sponsor.astro` → `/sponsor`
+- Astro 中**一个路由 = `src/pages/` 下一个 `.astro` 文件**：主页 `index.astro` → `/`，赞助页 `sponsor.astro` → `/sponsor`，服务状态页 `status.astro` → `/status`
 - 非独立页面的内容作为主页模块渲染（由 `[modules]` 控制），**无需单独 `.astro` 文件**
 - 主页与赞助页内容均为构建期数据，已用 `export const prerender = true` **静态化**（避免每次请求跑 SSR）；API 路由保持动态
 - 水合策略：首屏必需的 island 才用 `client:load`，非首屏交互用 `client:idle`，页面下方模块用 `client:visible`
-- API 路由：`src/pages/api/bili-api.ts`（`?action=avatar` 头像代理、`?uid=...` 直播状态检测；头像缓存 1 小时、直播检测限 5 分钟/次）
+- API 路由：`src/pages/api/bili-api.ts`（`?action=avatar` 头像代理、`?uid=...` 直播状态检测；头像缓存 1 小时、直播检测限 5 分钟/次）、`src/pages/api/monitor.ts`（服务状态探测，返回 HTTP/TCP 结果，25 秒缓存）
 
 ## 样式规范
 

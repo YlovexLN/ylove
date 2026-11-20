@@ -3,7 +3,8 @@ import Layout from "@/layouts/Layout.astro";
 import Navbar from "@/components/react/Navbar";
 import Hero from "@/components/react/Hero";
 import Footer from "@/components/react/Footer";
-import { getRawProfile } from "@/data/profile";
+import { getRawProfile, profile } from "@/data/profile";
+import { isMonitorEnabled } from "@/data/monitor";
 import fetchApi from "@/lib/strapi";
 import { getCollection } from "astro:content";
 import WorkCards from "@/components/react/WorkCards";
@@ -20,6 +21,8 @@ const raw = getRawProfile();
 const avatar = raw.avatar || "";
 const liveGifUrl = "/avatars/live.gif";
 const isScroll = raw.mode === "scroll";
+// 监控关闭时，导航栏不显示「服务状态」入口
+const statusEnabled = isMonitorEnabled();
 const mod = raw.modules;
 const contentSource = raw.content_source;
 
@@ -70,7 +73,7 @@ if (contentSource === "markdown") {
 ---
 
 <Layout title={raw.site_title} description={raw.site_description}>
-  <Navbar client:idle />
+  <Navbar client:idle logo={profile.logo} showStatus={statusEnabled} />
   <main>
     <Hero
       client:load

@@ -143,9 +143,52 @@
 | `STRAPI_URL` / `STRAPI_TOKEN` | Strapi 数据源地址与 Token |
 | `FOOTER_SHOW` | 页脚底部信息整行开关：`true` / `false` |
 | `FOOTER_ICP_SHOW` | 备案号单独开关：`false` 只隐藏备案号 |
+| `FOOTER_ICP_TEXT` / `FOOTER_ICP_URL` / `FOOTER_ICP_LABEL` | 覆盖备案号的文本 / 链接 / 前缀文字（`config.toml` 未写 `[footer.icp]` 时，只给 `FOOTER_ICP_TEXT` 也能生成一条） |
 | `SPONSOR_SHOW` | 赞助总开关：`false` 隐藏首页赞助链接并禁用 `/sponsor` 页面（默认跟随 `config.toml` 的 `show`） |
+| `MONITOR_SHOW` | 服务状态总开关：`false` 隐藏导航入口并禁用 `/status` 页面 |
+| `MONITOR_TITLE` / `MONITOR_INTERVAL` / `MONITOR_TIMEOUT` | 服务状态页标题 / 轮询秒数 / 探测超时毫秒 |
+| `MONITOR_SHOW_HOSTS` | 是否在页面显示目标地址（默认 `false`，防止主机名 / IP 泄漏） |
+| `MONITOR_TARGETS` | 服务状态页目标列表，JSON 数组，**整体覆盖** `[[monitor.targets]]` |
+| `MONITOR_HOST_<ID>` | 单个 TCP 目标的主机名，如 `MONITOR_HOST_MC`（地址不必写进仓库） |
+
+`MONITOR_TARGETS` 示例：
+
+```json
+[
+  { "id": "home", "name": "本站首页", "type": "http", "url": "https://example.com", "secure": true, "check_cert": true },
+  { "id": "mc", "name": "Minecraft 生存服", "type": "tcp", "host": "mc.example.com", "port": 25565 }
+]
+```
+
+**生效时机**：服务端接口 `/api/monitor` 在**每次请求时**读取环境变量（Node / Netlify 读 `process.env`，Cloudflare 读 `locals.runtime.env`，ESA 边缘函数读 `process.env`），因此在平台控制台改完**重新部署即可生效，无需重新构建**；构建期内联的 `import.meta.env` 仅作为兜底。
+
+> **ESA 说明**：ESA 下 `/api/monitor` 由边缘函数 `esa/functions/bili-api.ts` 提供。ESA 边缘运行时支持 `process.env`（Runtime API 仅暴露 `env` / `nextTick`），因此上面全部 `MONITOR_*` 变量在 ESA 上同样生效，改完重新部署即可。
+>
+> - 变量配在 ESA 控制台的 **Pages / 函数 → 环境变量**（生产环境 / 测试环境分别勾选）
+> - `MONITOR_TARGETS` 未配置或 JSON 非法时，回落到函数内的默认清单（`DEFAULT_TARGETS`）
+> - TCP 目标在边缘运行时无法探测（无 raw socket），接口返回 `unsupported`，页面显示「不支持」而不是误报故障
 
 > **优先级**：环境变量 > `config.toml`。开关类变量相互独立，可只填其一。
+
+### 监控节点地址不要进仓库
+
+`config.toml` 与 `netlify.toml` 都会提交进公开仓库，**节点地址（尤其游戏服 host / IP）不要写在这两个文件里**。仓库内只保留 `[monitor]` 的通用字段，`[[monitor.targets]]` 全部注释掉；真实节点按平台配置：
+
+| 平台 | 配置位置 | 说明 |
+| --- | --- | --- |
+| **Netlify** | 控制台 `Site configuration → Environment variables` | ⚠️ 不能放 `netlify.toml`（进仓库）。Scopes 勾 **Functions** + **Builds** |
+| **Cloudflare** | 控制台 `Settings → Variables and Secrets`，类型选 **Secret** | ⚠️ 不能放 `wrangler.jsonc` 的 `vars`（进仓库） |
+| **ESA** | 控制台 `Pages / 函数 → 环境变量` | 边缘函数运行时读取 |
+| **Node / VPS** | 项目根 `.env`（已被 `.gitignore` 忽略） | 或构建命令前注入 shell 变量 |
+
+本地调试时把同样的 `MONITOR_TARGETS` 写进 `.env` 即可：
+
+```sh
+MONITOR_TARGETS=[{"id":"home","name":"本站","type":"http","url":"https://example.com","secure":true,"check_cert":true}]
+MONITOR_HOST_MC=example.com
+```
+
+> 平台侧若未配置任何节点，`/status` 会显示「尚未配置监控目标」（而不是误报成「已关闭」）。
 
 ## 已知问题与排查
 

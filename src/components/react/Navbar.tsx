@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
 import { Icon } from "@/components/ui/icon";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
-import { profile } from "@/data/profile";
 
 // GitHub 仓库地址（固定链接，指向仓库页）
 const GITHUB_URL = "https://github.com/YlovexLN/ylove";
 
-export default function Navbar() {
+interface NavbarProps {
+  /** 站点 Logo 文案：由页面传入，避免客户端打包整份 config.toml?raw */
+  logo?: string;
+  /** 是否显示「服务状态」入口（监控关闭时为 false） */
+  showStatus?: boolean;
+}
+
+export default function Navbar({ logo = "", showStatus = true }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -27,12 +33,20 @@ export default function Navbar() {
     >
       <nav className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <a
-          href="#"
+          href="/"
           className="text-2xl font-display text-text-primary hover:text-gold transition-colors"
         >
-          {profile.logo}
+          {logo}
         </a>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          {showStatus && (
+            <a
+              href="/status"
+              className="text-sm text-text-secondary transition-colors hover:text-gold"
+            >
+              服务状态
+            </a>
+          )}
           {GITHUB_URL && (
             <a
               href={GITHUB_URL}

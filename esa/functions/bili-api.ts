@@ -69,9 +69,193 @@ async function getFaceUrl(uid: string): Promise<string> {
   return "";
 }
 
+// ── 服务状态监控（/api/monitor）─────────────────────────────
+// ESA 边缘运行时没有 raw socket，只能做 HTTP 探测；
+// TCP 目标一律返回 unsupported（前端显示「不支持」，不会误报故障）。
+//
+// 配置来源：请求时读运行时环境变量（ESA Runtime API 提供 process.env 子接口），
+// 与 Node / Netlify / Cloudflare 的行为一致；读不到时回落到下面的默认清单。
+//   MONITOR_SHOW / MONITOR_TITLE / MONITOR_INTERVAL / MONITOR_TIMEOUT /
+//   MONITOR_SHOW_HOSTS / MONITOR_TARGETS(JSON 数组)
+//
+// 节点清单随接口响应一起下发，页面按接口返回渲染，构建期不注入任何节点信息。
+interface MonitorTarget {
+  id: string;
+  name: string;
+  type: string;
+  url?: string;
+  host?: string;
+  port?: number;
+  secure?: boolean;
+}
+
+/** 读取运行时环境变量；边缘运行时没有 process 时返回 undefined */
+function readEnv(key: string): string | undefined {
+  try {
+    const proc = (globalThis as any).process;
+    const value = proc?.env?.[key];
+    return typeof value === "string" && value !== "" ? value : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function envBool(key: string): boolean | undefined {
+  const value = readEnv(key);
+  if (value === undefined) return undefined;
+  return value !== "false" && value !== "0";
+}
+
+function envNum(key: string): number | undefined {
+  const value = readEnv(key);
+  if (value === undefined) return undefined;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : undefined;
+}
+
+/** 默认清单：环境变量未配置时使用 */
+const DEFAULT_TARGETS: MonitorTarget[] = [
+  { id: "github", name: "GitHub 主页", type: "http", url: "https://github.com/YlovexLN", secure: true },
+  { id: "mc", name: "Minecraft 生存服", type: "tcp" },
+];
+
+const DEFAULT_TIMEOUT = 5000;
+const DEFAULT_TITLE = "服务可用率";
+const DEFAULT_INTERVAL = 240;
+
+/** 解析 MONITOR_TARGETS（JSON 数组），非法时回落到默认清单 */
+function resolveTargets(): MonitorTarget[] {
+  const raw = readEnv("MONITOR_TARGETS");
+  if (!raw) return DEFAULT_TARGETS;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return DEFAULT_TARGETS;
+    const list = parsed.filter((item) => item && typeof item === "object") as MonitorTarget[];
+    return list.length > 0 ? list : DEFAULT_TARGETS;
+  } catch {
+    // ESA 边缘运行时只支持 console.log / console.alert
+    console.log("[monitor] MONITOR_TARGETS 不是合法 JSON，已回落默认清单");
+    return DEFAULT_TARGETS;
+  }
+}
+
+/** 展示用地址：show_hosts 关闭时返回空串，避免主机名 / IP 外泄 */
+function targetLabel(target: MonitorTarget, showHosts: boolean): string {
+  if (!showHosts) return "";
+  if (target.type === "tcp") return target.host ? `${target.host}:${target.port ?? ""}` : "";
+  if (!target.url) return "";
+  try {
+    return new URL(target.url).host;
+  } catch {
+    return "";
+  }
+}
+
+let monitorCache: { ts: number; body: string } | null = null;
+
+async function probeHttpTarget(
+  target: { id: string; url?: string; secure?: boolean },
+  timeout: number
+) {
+  if (!target.url) {
+    return { id: target.id, ok: false, ms: 0, error: "未配置地址" };
+  }
+  const started = Date.now();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  try {
+    const res = await fetch(target.url, {
+      redirect: "follow",
+      signal: controller.signal,
+      headers: { "User-Agent": UA, Accept: "*/*", "Cache-Control": "no-cache" },
+    });
+    const ms = Date.now() - started;
+    try {
+      await res.body?.cancel();
+    } catch {
+      /* body 可能不可取消，忽略 */
+    }
+    const ok = res.status >= 200 && res.status < 400;
+    // secure：跟随跳转后仍必须是 https
+    if (ok && target.secure && !(res.url || target.url).startsWith("https:")) {
+      return { id: target.id, ok: false, ms, status: res.status, error: "未使用 HTTPS" };
+    }
+    return { id: target.id, ok, ms, status: res.status };
+  } catch {
+    return { id: target.id, ok: false, ms: Date.now() - started, error: "请求超时或无法连接" };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function handleMonitor(): Promise<Response> {
+  const now = Date.now();
+
+  // 配置在请求时解析：平台环境变量改了重新部署即生效，无需改代码
+  const enabled = envBool("MONITOR_SHOW") ?? true;
+  const title = readEnv("MONITOR_TITLE") || DEFAULT_TITLE;
+  const interval = Math.max(30, envNum("MONITOR_INTERVAL") ?? DEFAULT_INTERVAL);
+  const timeout = Math.min(10_000, Math.max(1_000, envNum("MONITOR_TIMEOUT") ?? DEFAULT_TIMEOUT));
+  const showHosts = envBool("MONITOR_SHOW_HOSTS") ?? false;
+  const targets = resolveTargets();
+
+  if (!enabled || targets.length === 0) {
+    const empty = JSON.stringify({
+      ts: Date.now(),
+      enabled: false,
+      title,
+      interval,
+      tcp: false,
+      targets: [],
+      results: [],
+    });
+    return new Response(empty, {
+      headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=20" },
+    });
+  }
+
+  if (monitorCache && now - monitorCache.ts < 25_000) {
+    return new Response(monitorCache.body, {
+      headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=20" },
+    });
+  }
+
+  const results = await Promise.all(
+    targets.map((target) =>
+      target.type === "tcp"
+        ? Promise.resolve({ id: target.id, ok: false, ms: 0, unsupported: true })
+        : probeHttpTarget(target, timeout)
+    )
+  );
+
+  // 节点清单随结果下发：页面完全由接口驱动，静态 HTML 不含任何节点信息
+  const body = JSON.stringify({
+    ts: Date.now(),
+    enabled: true,
+    title,
+    interval,
+    tcp: false,
+    targets: targets.map((target) => ({
+      id: target.id,
+      name: target.name || target.id,
+      type: target.type,
+      // 不下发地址，避免主机名 / IP 外泄（show_hosts 开启时才带）
+      label: targetLabel(target, showHosts),
+    })),
+    results,
+  });
+  monitorCache = { ts: Date.now(), body };
+  return new Response(body, {
+    headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=20" },
+  });
+}
+
 export default {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/api/monitor")) {
+      return handleMonitor();
+    }
     if (!url.pathname.startsWith("/api/bili-api")) {
       return new Response("Not Found", { status: 404 });
     }

@@ -130,7 +130,42 @@ text = "ESA"
 url = "https://www.aliyun.com/product/esa"
 
 # 备案号（独立配置，FOOTER_ICP_SHOW=false 可单独隐藏）
+# 也可用环境变量覆盖：FOOTER_ICP_TEXT（文本）/ FOOTER_ICP_URL（链接）/ FOOTER_ICP_LABEL（前缀文字）
 [footer.icp]
 show = false
-text = "黔ICP备2025044225号"
-url = "http://beian.miit.gov.cn/"
+# text = ""
+# url = ""
+
+# ── 服务状态监控（/status）──────────────────────────────
+# 字段：enabled 开关 · interval 轮询秒数 · timeout 超时毫秒 · show_hosts 显示目标地址
+# 平台环境变量优先：MONITOR_SHOW / MONITOR_TITLE / MONITOR_INTERVAL / MONITOR_TIMEOUT / MONITOR_SHOW_HOSTS
+#   MONITOR_TARGETS = JSON 数组，整体覆盖下面的 [[monitor.targets]]
+# 每个目标：id / name / type（http | tcp）
+#   http：url，可选 expect_status、secure（只认 https）、check_cert（证书天数，仅 Node）
+#   tcp ：host、port；host 留空则读环境变量 MONITOR_HOST_<ID>
+# 说明：TCP 需服务端 raw socket，ESA 等边缘环境会显示「不支持」；历史存浏览器 48 小时。
+#
+# ⚠️ 节点地址不要写进本文件（仓库公开）。真实节点请在部署平台配置 MONITOR_TARGETS，
+#    本地调试放 .env（已被 .gitignore 忽略）。下面只保留占位示例，取消注释即可本地试跑。
+[monitor]
+enabled  = true
+title    = "服务可用率"
+interval = 240
+timeout  = 5000
+show_hosts = false
+
+# 占位示例：真实节点用平台环境变量 MONITOR_TARGETS 配置（格式见 docs/deploy.md）
+# [[monitor.targets]]
+# id   = "home"
+# name = "本站"
+# type = "http"
+# url  = "https://example.com"
+# secure = true
+# check_cert = true
+
+# [[monitor.targets]]
+# id   = "mc"
+# name = "Minecraft 生存服"
+# type = "tcp"
+# host = ""            # 留空则读环境变量 MONITOR_HOST_MC
+# port = 25565

@@ -1,0 +1,30 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Navbar from "@/components/react/Navbar";
+import Footer from "@/components/react/Footer";
+import StatusPage from "@/components/react/StatusPage";
+import { profile } from "@/data/profile";
+import { isMonitorEnabled, monitor } from "@/data/monitor";
+
+// 页面壳静态化；状态数据与监控节点清单全部由 island 运行时请求 /api/monitor 获取，
+// 构建期不向 HTML 注入任何节点信息（避免静态产物泄露主机名 / IP）
+export const prerender = true;
+
+// 监控关闭时不对外暴露该页（构建产出一张跳回首页的重定向页）
+if (!isMonitorEnabled()) {
+  return Astro.redirect("/");
+}
+
+const title = `${monitor.title} | ${profile.site_title}`;
+---
+
+<Layout title={title} description="站点与游戏服务器的实时可用性监控">
+  <Navbar client:idle logo={profile.logo} />
+  <!-- 与其它页面一致：内容不足一屏时把页脚压到视口底部 -->
+  <div class="flex min-h-screen flex-col">
+    <main class="flex-1 px-4 pt-28 pb-20">
+      <StatusPage client:load />
+    </main>
+    <Footer client:visible footerInfo={profile.footer} />
+  </div>
+</Layout>
