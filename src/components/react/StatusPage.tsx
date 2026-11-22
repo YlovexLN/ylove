@@ -36,17 +36,22 @@ export default function StatusPage() {
   const [updatedAt, setUpdatedAt] = useState(0);
   const [busy, setBusy] = useState(false);
   const [offline, setOffline] = useState(false);
-  // 首次成功取到结果后置真：用于区分「还没探测」与「当前环境没配置这个节点」
+  // 是否已收到接口响应（区分「加载中」与「当前环境没配置这个节点」）
   const [loaded, setLoaded] = useState(false);
+  // 是否至少拿到过一次探测结果（快照可能还没探测）
+  const [probed, setProbed] = useState(false);
   // 运行时开关：平台侧关掉监控时页面只提示，不显示任何节点
   const [enabled, setEnabled] = useState(true);
   // 配置有误时的提示（如 MONITOR_TARGETS 不是合法 JSON）
   const [warning, setWarning] = useState("");
 
-  const tick = useCallback(async () => {
-    setBusy(true);
+  /** 取快照：只读缓存与历史，不跑探测，首屏立即出图 */
+  const refresh = useCallback(async (probe = false) => {
+    if (probe) setBusy(true);
     try {
-      const res = await fetch("/api/monitor", { cache: "no-store" });
+      const res = await fetch(probe ? "/api/monitor?probe=1" : "/api/monitor", {
+        cache: "no-store",
+      });
       if (!res.ok) throw new Error(String(res.status));
       const data = (await res.json()) as MonitorResponse;
 
@@ -56,29 +61,30 @@ export default function StatusPage() {
       setWarning(data.warning || "");
       setTargets(data.targets || []);
       setResults(Object.fromEntries(data.results.map((r) => [r.id, r])));
+      setProbed(data.probed);
       setUpdatedAt(data.ts);
       setOffline(false);
       setLoaded(true);
 
-      // 历史由服务端按整点聚合后下发，所有设备看到同一份，不再各存 localStorage
+      // 历史由服务端按整点聚合后下发，所有设备看到同一份
       if (data.history) setStore(data.history);
     } catch {
       setOffline(true);
       setLoaded(true);
     } finally {
-      setBusy(false);
+      if (probe) setBusy(false);
     }
   }, []);
 
-  // 轮询间隔来自接口（运行时可配），先用一个保守默认值，等首次响应后再调整
+  // 首屏先拿快照渲染节点与心跳图，探测另起一个请求；探测慢也不会白屏
   useEffect(() => {
-    tick();
-  }, [tick]);
+    refresh().then(() => refresh(true));
+  }, [refresh]);
 
   useEffect(() => {
-    const timer = setInterval(tick, interval * 1000);
+    const timer = setInterval(() => refresh(true), interval * 1000);
     return () => clearInterval(timer);
-  }, [tick, interval]);
+  }, [refresh, interval]);
 
   // 用服务端采样时间定位格子，避免客户端时钟不准导致历史落在错误的格子里
   const hours = useMemo(() => {
@@ -99,11 +105,11 @@ export default function StatusPage() {
             {offline
               ? "检测服务暂不可用，稍后自动重试"
               : updatedAt
-                ? `最近更新 ${formatTime(updatedAt)} · 每 ${interval} 秒自动检测`
+                ? `${probed ? `最近更新 ${formatTime(updatedAt)}` : "正在检测…"} · 每 ${interval} 秒自动检测`
                 : "正在检测…"}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={tick} disabled={busy}>
+        <Button variant="outline" size="sm" onClick={() => refresh(true)} disabled={busy}>
           <Icon icon={faArrowRotateRight} className={busy ? "h-3 w-3 animate-spin" : "h-3 w-3"} />
           <span className="ml-1.5">刷新</span>
         </Button>
@@ -125,6 +131,7 @@ export default function StatusPage() {
               target={target}
               result={results[target.id]}
               loaded={loaded}
+              probed={probed}
               buckets={hours.map((h) => store[target.id]?.[h])}
               hours={hours}
             />
@@ -138,15 +145,17 @@ export default function StatusPage() {
 interface CardProps {
   target: PublicMonitorTarget;
   result?: ProbeResult;
-  /** 是否已收到过至少一次探测结果 */
+  /** 是否已收到过接口响应 */
   loaded: boolean;
+  /** 是否已经完成过至少一次真实探测 */
+  probed: boolean;
   buckets: (MonitorBucket | undefined)[];
   hours: number[];
 }
 
-function TargetCard({ target, result, loaded, buckets, hours }: CardProps) {
-  // 页面按接口返回的清单渲染；当前环境没配置该节点时给出明确提示
-  const missing = loaded && !result;
+function TargetCard({ target, result, loaded, probed, buckets, hours }: CardProps) {
+  // 快照阶段不算「未配置」，要等探测请求回来才能下这个结论
+  const missing = loaded && probed && !result;
   const sampled = buckets.filter((b): b is MonitorBucket => Boolean(b?.total));
   const total = sampled.reduce((sum, b) => sum + b.total, 0);
   const okCount = sampled.reduce((sum, b) => sum + b.ok, 0);
@@ -206,7 +215,7 @@ function TargetCard({ target, result, loaded, buckets, hours }: CardProps) {
           (bucket, i) => (
             <div
               key={i}
-              className={`min-w-0 flex-1 rounded-full ${bucketTone(bucket)}`}
+              className={`min-w-0 flex-1 rounded-full ${bucketTone(bucket)} ${!probed && !bucket ? "animate-pulse" : ""}`}
               title={
                 bucket && bucket.total
                   ? `${formatTime(hours[i])} · 可用 ${((bucket.ok / bucket.total) * 100).toFixed(2)}%（${bucket.ok}/${bucket.total}）`

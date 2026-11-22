@@ -71,7 +71,13 @@ export interface MonitorResponse {
   tcp: boolean;
   /** 本次实际探测的目标清单（页面按此渲染，不依赖构建期注入） */
   targets: PublicMonitorTarget[];
+  /**
+   * 最近一次探测结果。默认的快速快照请求可能还没有探测过，此时为空数组；
+   * 页面据此显示「检测中」，而不是误报「当前环境未配置该节点」。
+   */
   results: ProbeResult[];
+  /** 是否至少完成过一次真实探测（用于区分「还没探」与「当前环境没配这个节点」） */
+  probed: boolean;
   /** 配置有问题时的提示（如 MONITOR_TARGETS 不是合法 JSON），页面据此给出说明 */
   warning?: string;
 }

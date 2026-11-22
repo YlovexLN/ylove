@@ -83,6 +83,16 @@ async function getFaceUrl(uid: string): Promise<string> {
 import { DEFAULT_MONITOR, DEFAULT_TARGETS } from "./monitor-defaults.js";
 import { getHistory, recordSamples } from "../../src/lib/monitor-history";
 
+interface ProbeResult {
+  id: string;
+  ok: boolean;
+  ms: number;
+  status?: number;
+  error?: string;
+  unsupported?: boolean;
+  self?: boolean;
+}
+
 interface MonitorTarget {
   id: string;
   name: string;
@@ -176,7 +186,7 @@ function isSelfTarget(url: string | undefined, selfHost: string): boolean {
   }
 }
 
-let monitorCache: { ts: number; body: string } | null = null;
+let monitorCache: { ts: number; results: ProbeResult[] } | null = null;
 
 async function probeHttpTarget(
   target: { id: string; url?: string; secure?: boolean },
@@ -213,14 +223,7 @@ async function probeHttpTarget(
   }
 }
 
-/** 缓存响应里只替换 history 字段；ESA 下 history 为最后一个字段 */
-function replaceHistory(body: string, history: ReturnType<typeof getHistory>): string {
-  const start = body.indexOf(',"history":');
-  if (start === -1) return body;
-  return body.slice(0, start) + ',"history":' + JSON.stringify(history) + "}";
-}
-
-async function handleMonitor(selfHost: string, now: number): Promise<Response> {
+async function handleMonitor(request: Request, selfHost: string, now: number): Promise<Response> {
   // 配置在请求时解析：平台环境变量改了重新部署即生效，无需改代码
   const enabled = envBool("MONITOR_SHOW") ?? true;
   const title = readEnv("MONITOR_TITLE") || DEFAULT_TITLE;
@@ -228,6 +231,8 @@ async function handleMonitor(selfHost: string, now: number): Promise<Response> {
   const timeout = Math.min(10_000, Math.max(1_000, envNum("MONITOR_TIMEOUT") ?? DEFAULT_TIMEOUT));
   const showHosts = envBool("MONITOR_SHOW_HOSTS") ?? DEFAULT_MONITOR.showHosts;
   const { targets, warning } = resolveTargets();
+
+  const wantProbe = new URL(request.url).searchParams.get("probe") === "1";
 
   if (!enabled || targets.length === 0) {
     const empty = JSON.stringify({
@@ -238,6 +243,7 @@ async function handleMonitor(selfHost: string, now: number): Promise<Response> {
       tcp: false,
       targets: [],
       results: [],
+      probed: false,
       history: getHistory(),
       ...(warning ? { warning } : {}),
     });
@@ -246,31 +252,25 @@ async function handleMonitor(selfHost: string, now: number): Promise<Response> {
     });
   }
 
-  if (monitorCache && now - monitorCache.ts < 25_000) {
-    // 探测结果可复用，但历史快照按当前时间裁剪
-    return new Response(replaceHistory(monitorCache.body, getHistory()), {
-      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-    });
+  // 探测结果过期时按需发起，和首屏快照分开；探测可能耗时数秒。
+  if (wantProbe && (!monitorCache || now - monitorCache.ts >= 25_000)) {
+    const results = await Promise.all(
+      targets.map((target) => {
+        if (target.type === "tcp") {
+          return Promise.resolve({ id: target.id, ok: false, ms: 0, unsupported: true });
+        }
+        // 自身目标：边缘函数请求自己的域名会被拦成 502，能返回响应即说明在线
+        if (isSelfTarget(target.url, selfHost)) {
+          return Promise.resolve({ id: target.id, ok: true, ms: 0, self: true });
+        }
+        return probeHttpTarget(target, timeout);
+      })
+    );
+    recordSamples(results);
+    monitorCache = { ts: now, results };
   }
 
-  const results = await Promise.all(
-    targets.map((target) => {
-      if (target.type === "tcp") {
-        return Promise.resolve({ id: target.id, ok: false, ms: 0, unsupported: true });
-      }
-      // 目标就是当前站点自身：边缘函数请求自己的域名会被 ESA 拦成 502，
-      // 无法真实探测；但「能返回这个响应」已说明站点在线，直接判可用并打标记。
-      if (isSelfTarget(target.url, selfHost)) {
-        return Promise.resolve({ id: target.id, ok: true, ms: 0, self: true });
-      }
-      return probeHttpTarget(target, timeout);
-    })
-  );
-
-  // 服务端按整点累计，所有访客共享同一份历史；客户端不再各存一份
-  recordSamples(results);
-
-  // 节点清单随结果下发：页面完全由接口驱动，静态 HTML 不含任何节点信息
+  // 节点清单随响应下发：页面完全由接口驱动，静态 HTML 不含任何节点信息
   const body = JSON.stringify({
     ts: now,
     enabled: true,
@@ -284,10 +284,10 @@ async function handleMonitor(selfHost: string, now: number): Promise<Response> {
       // 不下发地址，避免主机名 / IP 外泄（show_hosts 开启时才带）
       label: targetLabel(target, showHosts),
     })),
-    results,
+    results: monitorCache?.results ?? [],
+    probed: Boolean(monitorCache),
     history: getHistory(),
   });
-  monitorCache = { ts: now, body };
   return new Response(body, {
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
@@ -297,7 +297,7 @@ export default {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname.startsWith("/api/monitor")) {
-      return handleMonitor(url.host, Date.now());
+      return handleMonitor(request, url.host, Date.now());
     }
     if (!url.pathname.startsWith("/api/bili-api")) {
       return new Response("Not Found", { status: 404 });
