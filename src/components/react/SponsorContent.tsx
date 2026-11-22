@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Icon, type FaIcon } from "@/components/ui/icon";
-import {
-  faQrcode,
-  faArrowLeft,
-  faArrowRight,
-} from "@fortawesome/free-solid-svg-icons";
-import { faWeixin, faAlipay } from "@fortawesome/free-brands-svg-icons";
+import { faQrcode } from "@fortawesome/free-solid-svg-icons/faQrcode";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons/faArrowLeft";
+import { faArrowRight } from "@fortawesome/free-solid-svg-icons/faArrowRight";
+import { faWeixin } from "@fortawesome/free-brands-svg-icons/faWeixin";
+import { faAlipay } from "@fortawesome/free-brands-svg-icons/faAlipay";
 
 type PayMethod = "wechat" | "alipay";
 

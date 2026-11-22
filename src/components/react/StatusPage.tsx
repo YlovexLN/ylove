@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { faArrowRotateRight, faHeartPulse } from "@fortawesome/free-solid-svg-icons";
+import { faArrowRotateRight } from "@fortawesome/free-solid-svg-icons/faArrowRotateRight";
+import { faHeartPulse } from "@fortawesome/free-solid-svg-icons/faHeartPulse";
 import type { MonitorResponse, ProbeResult, PublicMonitorTarget } from "@/interfaces/monitor";
 import {
   MONITOR_BUCKETS,

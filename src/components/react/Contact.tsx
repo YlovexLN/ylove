@@ -4,8 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { profile } from "@/data/profile";
 import { Icon } from "@/components/ui/icon";
-import { faGithub } from "@fortawesome/free-brands-svg-icons";
-import { faEnvelope, faPaperPlane } from "@fortawesome/free-solid-svg-icons";
+import { faGithub } from "@fortawesome/free-brands-svg-icons/faGithub";
+import { faEnvelope } from "@fortawesome/free-solid-svg-icons/faEnvelope";
+import { faPaperPlane } from "@fortawesome/free-solid-svg-icons/faPaperPlane";
 
 export default function Contact() {
   const [submitted, setSubmitted] = useState(false);

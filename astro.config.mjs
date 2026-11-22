@@ -51,16 +51,6 @@ export default defineConfig({
       // 关掉 gzip 体积统计：构建时无需再为每个 chunk 算一遍压缩后大小
       reportCompressedSize: false,
     },
-    optimizeDeps: {
-      // 预打包 Font Awesome 图标包：这两个包是单文件、上千个导出，
-      // 若排除在预打包之外，dev 每次启动都要现场转换整个巨大文件（实测拖慢启动 20s+，
-      // 甚至撞上 Vite module runner 的 60s 传输超时）。
-      // 预打包后产物缓存在 node_modules/.vite/deps，后续启动直接命中缓存。
-      include: [
-        '@fortawesome/free-brands-svg-icons',
-        '@fortawesome/free-solid-svg-icons',
-      ],
-    },
     server: {
       watch: {
         // 监听器忽略依赖与构建产物：项目根下 node_modules（3.8w 文件）与
