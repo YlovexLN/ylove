@@ -81,6 +81,7 @@ async function getFaceUrl(uid: string): Promise<string> {
 //
 // 节点清单随接口响应一起下发，页面按接口返回渲染，构建期不注入任何节点信息。
 import { DEFAULT_MONITOR, DEFAULT_TARGETS } from "./monitor-defaults.js";
+import { getHistory, recordSamples } from "../../src/lib/monitor-history";
 
 interface MonitorTarget {
   id: string;
@@ -212,9 +213,14 @@ async function probeHttpTarget(
   }
 }
 
-async function handleMonitor(selfHost: string): Promise<Response> {
-  const now = Date.now();
+/** 缓存响应里只替换 history 字段；ESA 下 history 为最后一个字段 */
+function replaceHistory(body: string, history: ReturnType<typeof getHistory>): string {
+  const start = body.indexOf(',"history":');
+  if (start === -1) return body;
+  return body.slice(0, start) + ',"history":' + JSON.stringify(history) + "}";
+}
 
+async function handleMonitor(selfHost: string, now: number): Promise<Response> {
   // 配置在请求时解析：平台环境变量改了重新部署即生效，无需改代码
   const enabled = envBool("MONITOR_SHOW") ?? true;
   const title = readEnv("MONITOR_TITLE") || DEFAULT_TITLE;
@@ -225,23 +231,25 @@ async function handleMonitor(selfHost: string): Promise<Response> {
 
   if (!enabled || targets.length === 0) {
     const empty = JSON.stringify({
-      ts: Date.now(),
+      ts: now,
       enabled,
       title,
       interval,
       tcp: false,
       targets: [],
       results: [],
+      history: getHistory(),
       ...(warning ? { warning } : {}),
     });
     return new Response(empty, {
-      headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=20" },
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
     });
   }
 
   if (monitorCache && now - monitorCache.ts < 25_000) {
-    return new Response(monitorCache.body, {
-      headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=20" },
+    // 探测结果可复用，但历史快照按当前时间裁剪
+    return new Response(replaceHistory(monitorCache.body, getHistory()), {
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
     });
   }
 
@@ -259,9 +267,12 @@ async function handleMonitor(selfHost: string): Promise<Response> {
     })
   );
 
+  // 服务端按整点累计，所有访客共享同一份历史；客户端不再各存一份
+  recordSamples(results);
+
   // 节点清单随结果下发：页面完全由接口驱动，静态 HTML 不含任何节点信息
   const body = JSON.stringify({
-    ts: Date.now(),
+    ts: now,
     enabled: true,
     title,
     interval,
@@ -274,10 +285,11 @@ async function handleMonitor(selfHost: string): Promise<Response> {
       label: targetLabel(target, showHosts),
     })),
     results,
+    history: getHistory(),
   });
-  monitorCache = { ts: Date.now(), body };
+  monitorCache = { ts: now, body };
   return new Response(body, {
-    headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=20" },
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 }
 
@@ -285,7 +297,7 @@ export default {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname.startsWith("/api/monitor")) {
-      return handleMonitor(url.host);
+      return handleMonitor(url.host, Date.now());
     }
     if (!url.pathname.startsWith("/api/bili-api")) {
       return new Response("Not Found", { status: 404 });

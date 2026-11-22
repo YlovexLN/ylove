@@ -3,62 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { faArrowRotateRight, faHeartPulse } from "@fortawesome/free-solid-svg-icons";
 import type { MonitorResponse, ProbeResult, PublicMonitorTarget } from "@/interfaces/monitor";
+import {
+  MONITOR_BUCKETS,
+  type MonitorBucket,
+  type MonitorStore,
+} from "@/lib/monitor-history";
 
 const HOUR = 3_600_000;
-/** 心跳图保留最近 48 小时，每小时一个格子 */
-const BUCKETS = 48;
-const STORE_KEY = "ylove:monitor:v1";
-
-interface Bucket {
-  /** 成功次数 */
-  ok: number;
-  /** 采样总数 */
-  total: number;
-}
-
-/** id → 小时时间戳 → 该小时的采样统计 */
-type Store = Record<string, Record<string, Bucket>>;
-
-function readStore(): Store {
-  try {
-    return JSON.parse(localStorage.getItem(STORE_KEY) || "{}") as Store;
-  } catch {
-    return {};
-  }
-}
-
-function writeStore(store: Store) {
-  try {
-    localStorage.setItem(STORE_KEY, JSON.stringify(store));
-  } catch {
-    /* 隐私模式 / 配额满时静默失败，页面仍显示实时状态 */
-  }
-}
-
-/** 把一次采样累加到所属小时，并裁掉 48 小时之外的旧数据 */
-function accumulate(store: Store, results: ProbeResult[], now: number): Store {
-  const hour = Math.floor(now / HOUR) * HOUR;
-  const oldest = hour - (BUCKETS - 1) * HOUR;
-
-  for (const result of results) {
-    if (result.unsupported) continue;
-    const byHour = (store[result.id] ||= {});
-    const bucket = (byHour[hour] ||= { ok: 0, total: 0 });
-    bucket.total += 1;
-    if (result.ok) bucket.ok += 1;
-  }
-
-  for (const id of Object.keys(store)) {
-    for (const key of Object.keys(store[id])) {
-      if (Number(key) < oldest) delete store[id][key];
-    }
-  }
-  return store;
-}
 
 /** 每个格子的配色：全绿=正常，偏黄=有零星失败，红=失败过半，灰=无数据 */
-function bucketTone(bucket?: Bucket): string {
-  if (!bucket || bucket.total === 0) return "bg-white/8";
+function bucketTone(bucket?: MonitorBucket): string {
+  if (!bucket || bucket.total === 0) return "bg-white/12";
   const ratio = bucket.ok / bucket.total;
   if (ratio === 1) return "bg-gold";
   if (ratio >= 0.9) return "bg-amber-400";
@@ -76,8 +31,7 @@ export default function StatusPage() {
   const [interval, setIntervalValue] = useState(60);
   const [targets, setTargets] = useState<PublicMonitorTarget[]>([]);
   const [results, setResults] = useState<Record<string, ProbeResult>>({});
-  const [store, setStore] = useState<Store>({});
-  const [mounted, setMounted] = useState(false);
+  const [store, setStore] = useState<MonitorStore>({});
   const [updatedAt, setUpdatedAt] = useState(0);
   const [busy, setBusy] = useState(false);
   const [offline, setOffline] = useState(false);
@@ -105,9 +59,8 @@ export default function StatusPage() {
       setOffline(false);
       setLoaded(true);
 
-      const next = accumulate(readStore(), data.results, Date.now());
-      writeStore(next);
-      setStore(next);
+      // 历史由服务端按整点聚合后下发，所有设备看到同一份，不再各存 localStorage
+      if (data.history) setStore(data.history);
     } catch {
       setOffline(true);
       setLoaded(true);
@@ -118,8 +71,6 @@ export default function StatusPage() {
 
   // 轮询间隔来自接口（运行时可配），先用一个保守默认值，等首次响应后再调整
   useEffect(() => {
-    setMounted(true);
-    setStore(readStore());
     tick();
   }, [tick]);
 
@@ -128,10 +79,11 @@ export default function StatusPage() {
     return () => clearInterval(timer);
   }, [tick, interval]);
 
-  // 每小时的格子时间轴（最新一小时在右端），随采样更新时间刷新
+  // 用服务端采样时间定位格子，避免客户端时钟不准导致历史落在错误的格子里
   const hours = useMemo(() => {
-    const end = Math.floor(Date.now() / HOUR) * HOUR;
-    return Array.from({ length: BUCKETS }, (_, i) => end - (BUCKETS - 1 - i) * HOUR);
+    if (!updatedAt) return [];
+    const end = Math.floor(updatedAt / HOUR) * HOUR;
+    return Array.from({ length: MONITOR_BUCKETS }, (_, i) => end - (MONITOR_BUCKETS - 1 - i) * HOUR);
   }, [updatedAt]);
 
   return (
@@ -172,7 +124,7 @@ export default function StatusPage() {
               target={target}
               result={results[target.id]}
               loaded={loaded}
-              buckets={mounted ? hours.map((h) => store[target.id]?.[h]) : []}
+              buckets={hours.map((h) => store[target.id]?.[h])}
               hours={hours}
             />
           ))}
@@ -187,14 +139,14 @@ interface CardProps {
   result?: ProbeResult;
   /** 是否已收到过至少一次探测结果 */
   loaded: boolean;
-  buckets: (Bucket | undefined)[];
+  buckets: (MonitorBucket | undefined)[];
   hours: number[];
 }
 
 function TargetCard({ target, result, loaded, buckets, hours }: CardProps) {
   // 页面按接口返回的清单渲染；当前环境没配置该节点时给出明确提示
   const missing = loaded && !result;
-  const sampled = buckets.filter((b): b is Bucket => Boolean(b?.total));
+  const sampled = buckets.filter((b): b is MonitorBucket => Boolean(b?.total));
   const total = sampled.reduce((sum, b) => sum + b.total, 0);
   const okCount = sampled.reduce((sum, b) => sum + b.ok, 0);
   const uptime = total > 0 ? (okCount / total) * 100 : null;
@@ -249,7 +201,7 @@ function TargetCard({ target, result, loaded, buckets, hours }: CardProps) {
       </div>
 
       <div className="mt-4 flex h-12 items-stretch gap-[3px]">
-        {(buckets.length ? buckets : Array.from({ length: BUCKETS }, () => undefined)).map(
+        {(buckets.length ? buckets : Array.from({ length: MONITOR_BUCKETS }, () => undefined)).map(
           (bucket, i) => (
             <div
               key={i}
@@ -268,8 +220,8 @@ function TargetCard({ target, result, loaded, buckets, hours }: CardProps) {
         {result?.unsupported
           ? "当前部署环境不支持 TCP 检测"
           : target.label
-            ? `${target.label} · 最近 ${BUCKETS} 小时`
-            : `最近 ${BUCKETS} 小时`}
+            ? `${target.label} · 最近 ${MONITOR_BUCKETS} 小时`
+            : `最近 ${MONITOR_BUCKETS} 小时`}
       </p>
     </section>
   );

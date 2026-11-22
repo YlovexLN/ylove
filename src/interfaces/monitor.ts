@@ -57,8 +57,10 @@ export interface ProbeResult {
 
 /** /api/monitor 响应体 */
 export interface MonitorResponse {
-  /** 采样时间戳 */
+  /** 服务端采样时间戳（毫秒） */
   ts: number;
+  /** 已按小时聚合的历史采样，供所有设备共享；key 为整点毫秒时间戳 */
+  history?: Record<string, Record<string, { ok: number; total: number }>>;
   /** 监控总开关（运行时判定） */
   enabled: boolean;
   /** 页面标题（运行时判定） */

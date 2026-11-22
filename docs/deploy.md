@@ -140,6 +140,8 @@
 
 **生效时机**：服务端接口 `/api/monitor` 在**每次请求时**读取环境变量（Node / Netlify 读 `process.env`，Cloudflare 读 `locals.runtime.env`，ESA 边缘函数读 `process.env`），因此在平台控制台改完**重新部署即可生效，无需重新构建**；构建期内联的 `import.meta.env` 仅作为兜底。
 
+**心跳历史**：服务端每次探测后把结果按整点聚合到内存（保留 48 小时），随接口 `history` 字段下发，所有访客共享同一份历史，新设备首次打开也能看到已有格子。服务重启或边缘实例回收后历史会清空，属预期行为。
+
 > **ESA 说明**：ESA 下 `/api/monitor` 由边缘函数 `esa/functions/bili-api.ts` 提供。
 >
 > - **ESA 控制台的「环境变量」是构建期注入的**（与 `BILIBILI_UID` 同理），边缘函数运行时读不到。因此 `pnpm build:esa` 会把 `MONITOR_*` 的最终结果烘焙进 `esa/functions/monitor-defaults.js`（该文件已 gitignore，避免地址进仓库）。优先级：**构建期环境变量 > config.toml**
