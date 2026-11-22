@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Icon } from "@/components/ui/icon";
-import { faGithub } from "@fortawesome/free-brands-svg-icons";
+import { faGithub } from "@fortawesome/free-brands-svg-icons/faGithub";
 
 // GitHub 仓库地址（固定链接，指向仓库页）
 const GITHUB_URL = "https://github.com/YlovexLN/ylove";

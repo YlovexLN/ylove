@@ -1,6 +1,7 @@
 import { timelineItems } from "@/data/timeline";
 import { Icon } from "@/components/ui/icon";
-import { faBriefcase, faGraduationCap } from "@fortawesome/free-solid-svg-icons";
+import { faBriefcase } from "@fortawesome/free-solid-svg-icons/faBriefcase";
+import { faGraduationCap } from "@fortawesome/free-solid-svg-icons/faGraduationCap";
 
 export default function Timeline() {
   return (

@@ -1,6 +1,6 @@
 import { posts } from "@/data/posts";
 import { Icon } from "@/components/ui/icon";
-import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
+import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons/faArrowUpRightFromSquare";
 import { Button } from "@/components/ui/button";
 
 export default function Posts() {

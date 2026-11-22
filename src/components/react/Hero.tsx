@@ -1,48 +1,44 @@
 import { useEffect, useState, useRef } from "react";
 import { Icon, type FaIcon } from "@/components/ui/icon";
-import {
-  faGithub,
-  faTwitter,
-  faLinkedin,
-  faBilibili,
-  faYoutube,
-  faInstagram,
-  faDiscord,
-  faTelegram,
-  faWeixin,
-  faQq,
-  faNpm,
-  faStackOverflow,
-  faReddit,
-  faFacebook,
-  faXTwitter,
-  faTwitch,
-  faTiktok,
-  faMedium,
-  faSpotify,
-  faCodepen,
-  faGitlab,
-  faBitbucket,
-  faDocker,
-  faFigma,
-  faSlack,
-  faLine,
-  faZhihu,
-  faSteam,
-  faKoFi,
-  faPatreon,
-} from "@fortawesome/free-brands-svg-icons";
-import {
-  faEnvelope,
-  faRss,
-  faGlobe,
-  faPhone,
-  faHeadphones,
-  faPodcast,
-  faRadio,
-  faChevronDown,
-  faMugHot,
-} from "@fortawesome/free-solid-svg-icons";
+import { faGithub } from "@fortawesome/free-brands-svg-icons/faGithub";
+import { faTwitter } from "@fortawesome/free-brands-svg-icons/faTwitter";
+import { faLinkedin } from "@fortawesome/free-brands-svg-icons/faLinkedin";
+import { faBilibili } from "@fortawesome/free-brands-svg-icons/faBilibili";
+import { faYoutube } from "@fortawesome/free-brands-svg-icons/faYoutube";
+import { faInstagram } from "@fortawesome/free-brands-svg-icons/faInstagram";
+import { faDiscord } from "@fortawesome/free-brands-svg-icons/faDiscord";
+import { faTelegram } from "@fortawesome/free-brands-svg-icons/faTelegram";
+import { faWeixin } from "@fortawesome/free-brands-svg-icons/faWeixin";
+import { faQq } from "@fortawesome/free-brands-svg-icons/faQq";
+import { faNpm } from "@fortawesome/free-brands-svg-icons/faNpm";
+import { faStackOverflow } from "@fortawesome/free-brands-svg-icons/faStackOverflow";
+import { faReddit } from "@fortawesome/free-brands-svg-icons/faReddit";
+import { faFacebook } from "@fortawesome/free-brands-svg-icons/faFacebook";
+import { faXTwitter } from "@fortawesome/free-brands-svg-icons/faXTwitter";
+import { faTwitch } from "@fortawesome/free-brands-svg-icons/faTwitch";
+import { faTiktok } from "@fortawesome/free-brands-svg-icons/faTiktok";
+import { faMedium } from "@fortawesome/free-brands-svg-icons/faMedium";
+import { faSpotify } from "@fortawesome/free-brands-svg-icons/faSpotify";
+import { faCodepen } from "@fortawesome/free-brands-svg-icons/faCodepen";
+import { faGitlab } from "@fortawesome/free-brands-svg-icons/faGitlab";
+import { faBitbucket } from "@fortawesome/free-brands-svg-icons/faBitbucket";
+import { faDocker } from "@fortawesome/free-brands-svg-icons/faDocker";
+import { faFigma } from "@fortawesome/free-brands-svg-icons/faFigma";
+import { faSlack } from "@fortawesome/free-brands-svg-icons/faSlack";
+import { faLine } from "@fortawesome/free-brands-svg-icons/faLine";
+import { faZhihu } from "@fortawesome/free-brands-svg-icons/faZhihu";
+import { faSteam } from "@fortawesome/free-brands-svg-icons/faSteam";
+import { faKoFi } from "@fortawesome/free-brands-svg-icons/faKoFi";
+import { faPatreon } from "@fortawesome/free-brands-svg-icons/faPatreon";
+import { faEnvelope } from "@fortawesome/free-solid-svg-icons/faEnvelope";
+import { faRss } from "@fortawesome/free-solid-svg-icons/faRss";
+import { faGlobe } from "@fortawesome/free-solid-svg-icons/faGlobe";
+import { faPhone } from "@fortawesome/free-solid-svg-icons/faPhone";
+import { faHeadphones } from "@fortawesome/free-solid-svg-icons/faHeadphones";
+import { faPodcast } from "@fortawesome/free-solid-svg-icons/faPodcast";
+import { faRadio } from "@fortawesome/free-solid-svg-icons/faRadio";
+import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
+import { faMugHot } from "@fortawesome/free-solid-svg-icons/faMugHot";
 import { useLivePulse } from "@/hooks/useLivePulse";
 import { getRingStyle } from "@/utils/live-ring";
 

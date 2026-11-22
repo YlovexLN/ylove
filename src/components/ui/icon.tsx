@@ -1,4 +1,4 @@
-import type { faGithub } from "@fortawesome/free-brands-svg-icons";
+import type { faGithub } from "@fortawesome/free-brands-svg-icons/faGithub";
 
 /**
  * Font Awesome 图标数据结构（free-* 图标包导出的图标对象）。
