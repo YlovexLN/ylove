@@ -27,6 +27,19 @@ function formatTime(ts: number): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
+/**
+ * 服务端历史往往只有当前整点一格：用当前探测状态回填其余空格，让心跳图首次进入也能铺满。
+ * 未探测或不支持探测的节点原样返回，保持灰色，避免误报。
+ */
+function fillEmptyBuckets(
+  buckets: (MonitorBucket | undefined)[],
+  result?: ProbeResult
+): (MonitorBucket | undefined)[] {
+  if (!result || result.unsupported) return buckets;
+  const fill: MonitorBucket = { ok: result.ok ? 1 : 0, total: 1 };
+  return buckets.map((bucket) => (bucket && bucket.total > 0 ? bucket : fill));
+}
+
 export default function StatusPage() {
   const [title, setTitle] = useState("");
   const [interval, setIntervalValue] = useState(60);
@@ -156,7 +169,13 @@ interface CardProps {
 function TargetCard({ target, result, loaded, probed, buckets, hours }: CardProps) {
   // 快照阶段不算「未配置」，要等探测请求回来才能下这个结论
   const missing = loaded && probed && !result;
+  // 可用率只统计真实历史，不含回填格，避免把展示填充算成真实可用率
   const sampled = buckets.filter((b): b is MonitorBucket => Boolean(b?.total));
+  // 服务端时间未就绪时先铺 48 个空格，再用当前探测状态回填，保证首屏就是一整条
+  const raw = buckets.length
+    ? buckets
+    : Array.from({ length: MONITOR_BUCKETS }, () => undefined as MonitorBucket | undefined);
+  const displayBuckets = fillEmptyBuckets(raw, result);
   const total = sampled.reduce((sum, b) => sum + b.total, 0);
   const okCount = sampled.reduce((sum, b) => sum + b.ok, 0);
   const uptime = total > 0 ? (okCount / total) * 100 : null;
@@ -211,19 +230,17 @@ function TargetCard({ target, result, loaded, probed, buckets, hours }: CardProp
       </div>
 
       <div className="mt-4 flex h-12 items-stretch gap-[3px]">
-        {(buckets.length ? buckets : Array.from({ length: MONITOR_BUCKETS }, () => undefined)).map(
-          (bucket, i) => (
-            <div
-              key={i}
-              className={`min-w-0 flex-1 rounded-full ${bucketTone(bucket)} ${!probed && !bucket ? "animate-pulse" : ""}`}
-              title={
-                bucket && bucket.total
-                  ? `${formatTime(hours[i])} · 可用 ${((bucket.ok / bucket.total) * 100).toFixed(2)}%（${bucket.ok}/${bucket.total}）`
-                  : "暂无数据"
-              }
-            />
-          )
-        )}
+        {displayBuckets.map((bucket, i) => (
+          <div
+            key={i}
+            className={`min-w-0 flex-1 rounded-full ${bucketTone(bucket)} ${!probed && !bucket ? "animate-pulse" : ""}`}
+            title={
+              bucket && bucket.total
+                ? `${formatTime(hours[i])} · 可用 ${((bucket.ok / bucket.total) * 100).toFixed(2)}%（${bucket.ok}/${bucket.total}）`
+                : "暂无数据"
+            }
+          />
+        ))}
       </div>
 
       <p className="mt-3 text-xs text-text-muted">
@@ -236,3 +253,7 @@ function TargetCard({ target, result, loaded, probed, buckets, hours }: CardProp
     </section>
   );
 }
+
+// === LOGIC TEST (temporary) ===
+export function __testFill(b: any[], r: any) { return fillEmptyBuckets(b, r).map((x: any) => x ? (x.ok + "/" + x.total) : "gray"); }
+export const __testTone = (b: any) => bucketTone(b);
