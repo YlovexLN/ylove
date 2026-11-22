@@ -83,6 +83,8 @@ graph TD
 | `/sponsor` | `src/pages/sponsor.astro` | `prerender = true` | 赞助页，受总开关控制 |
 | `/api/bili-api` | `src/pages/api/bili-api.ts` | 动态 | B站头像 / 直播状态代理 |
 | `/api/works` | `src/pages/api/works.ts` | 动态 | 作品列表实时接口 |
+| `/api/monitor` | `src/pages/api/monitor.ts` | 动态 | 服务状态探测；ESA 下由 `esa/functions/bili-api.ts` 提供 |
+| `/status` | `src/pages/status.astro` | `prerender = true` | 服务状态页，节点与历史由接口运行时下发 |
 
 - Astro 中**一个路由 = `src/pages/` 下一个文件**；非独立页面的内容作为主页模块渲染，无需单独文件。
 - 水合策略：首屏必需的 island 用 `client:load`（Hero），导航等非首屏交互用 `client:idle`，页面下方模块用 `client:visible`（WorkCards、Footer）。
@@ -98,6 +100,7 @@ graph TD
 
 - 服务端先向 B站首页握手获取匿名 `buvid3` cookie，再携带该 cookie + 浏览器 UA + 匹配 Referer 请求上游，规避数据中心 IP 风控（-352 / -412）。
 - 缓存：头像 `Cache-Control: max-age=3600`（1 小时），直播检测 5 分钟限频。
+- `/api/monitor` 每次成功探测后把结果按整点写入服务端内存（`src/lib/monitor-history.ts`，保留 48 小时），随响应 `history` 字段下发；页面直接渲染这份共享历史，不写 localStorage。服务重启或边缘实例回收后历史会清空，属预期行为。
 - 头像获取失败时前端 `onError` 回退到 `public/avatars/avatar.webp`，不裂图。
 
 ### 5.2 `/api/works`

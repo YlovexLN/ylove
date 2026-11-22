@@ -74,7 +74,7 @@ src/
 | `MONITOR_HOST_<ID>`               | 指定目标的主机名（如 `MONITOR_HOST_MC`），用于不把地址写进仓库 |
 | `STRAPI_URL` / `STRAPI_TOKEN`     | Strapi 数据源                                   |
 
-服务状态页（`/status`）的节点清单**由接口 `/api/monitor` 在请求时下发**，页面按接口返回渲染，构建期不向 HTML 注入任何节点信息（避免静态产物泄露主机名 / IP）。接口优先读平台运行时环境变量（Node / Netlify / ESA 边缘函数的 `process.env`、Cloudflare 的 `locals.runtime.env`），构建期内联的 `import.meta.env` 仅作兜底。
+服务状态页（`/status`）的节点清单与**心跳历史**都由接口 `/api/monitor` 在请求时下发：服务端按整点聚合最近 48 小时的探测结果（`src/lib/monitor-history.ts`），所有设备共享同一份历史，新访客也能立刻看到已有格子，不再依赖浏览器 localStorage。构建期不向 HTML 注入任何节点信息（避免静态产物泄露主机名 / IP）。接口优先读平台运行时环境变量（Node / Netlify / ESA 边缘函数的 `process.env`、Cloudflare 的 `locals.runtime.env`），构建期内联的 `import.meta.env` 仅作兜底。
 
 ## 页面与路由
 
